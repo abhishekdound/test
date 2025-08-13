@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
@@ -37,8 +36,8 @@ interface GraphData {
 const CustomNode = ({ data }: { data: any }) => {
   return (
     <div className={`px-4 py-2 shadow-md rounded-md bg-white border-2 ${
-      data.type === 'concept' ? 'border-blue-500' : 
-      data.type === 'document' ? 'border-green-500' : 
+      data.type === 'concept' ? 'border-blue-500' :
+      data.type === 'document' ? 'border-green-500' :
       'border-purple-500'
     }`}>
       <Handle type="target" position={Position.Top} />
@@ -124,7 +123,7 @@ function KnowledgeGraph() {
       // Update stats
       const concepts = data.nodes.filter(n => n.type === 'concept').length
       const documents = data.nodes.filter(n => n.type === 'document').length
-      
+
       setGraphStats({
         totalNodes: data.nodes.length,
         totalEdges: data.edges.length,

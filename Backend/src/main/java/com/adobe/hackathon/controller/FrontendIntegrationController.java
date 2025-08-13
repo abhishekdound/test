@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller specifically designed for frontend integration with Adobe Challenge requirements
@@ -86,7 +88,7 @@ public class FrontendIntegrationController {
                     .stream()
                     .filter(section -> section.getRelevanceScore() > 0.8)
                     .sorted((a, b) -> Double.compare(b.getRelevanceScore(), a.getRelevanceScore()))
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
 
             response.put("success", true);
             response.put("jobId", jobId);
@@ -413,44 +415,62 @@ public class FrontendIntegrationController {
      */
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> healthCheck() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "healthy");
-        response.put("timestamp", System.currentTimeMillis());
-        response.put("service", "Adobe Challenge Backend");
-        return ResponseEntity.ok(response);
+        Map<String, Object> health = new HashMap<>();
+        health.put("status", "UP");
+        health.put("timestamp", System.currentTimeMillis());
+        health.put("services", Map.of(
+            "database", "UP",
+            "fileStorage", "UP",
+            "adobe", "CONFIGURED"
+        ));
+        return ResponseEntity.ok(health);
     }
 
     /**
      * Get graph data for visualization
      */
     @GetMapping("/graph-data")
-    public ResponseEntity<Map<String, Object>> getGraphData() {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> getKnowledgeGraphData() {
+        try {
+            Map<String, Object> graphData = new HashMap<>();
 
-        // Create mock nodes
-        List<Map<String, Object>> nodes = Arrays.asList(
-            createNode("1", "Adobe Creative Suite", "concept", 45, "#3b82f6"),
-            createNode("2", "PDF Processing", "concept", 38, "#10b981"),
-            createNode("3", "Document Analysis", "concept", 42, "#8b5cf6"),
-            createNode("4", "Machine Learning", "concept", 35, "#f59e0b"),
-            createNode("5", "Document 1", "document", 50, "#ef4444"),
-            createNode("6", "Text Extraction", "concept", 28, "#06b6d4")
-        );
+            // Create sample nodes
+            List<Map<String, Object>> nodes = Arrays.asList(
+                createNode("1", "Document Analysis", "central", 250, 150),
+                createNode("2", "PDF Processing", "process", 150, 100),
+                createNode("3", "Text Extraction", "data", 350, 100),
+                createNode("4", "Knowledge Graph", "insight", 150, 200),
+                createNode("5", "Insights", "insight", 350, 200),
+                createNode("6", "Content Analysis", "data", 250, 250)
+            );
 
-        // Create mock edges
-        List<Map<String, Object>> edges = Arrays.asList(
-            createEdge("e1-2", "1", "2", 0.8, "related", "semantic"),
-            createEdge("e1-3", "1", "3", 0.6, "part of", "semantic"),
-            createEdge("e2-6", "2", "6", 0.9, "subset", "semantic"),
-            createEdge("e3-4", "3", "4", 0.5, "uses", "co-occurrence"),
-            createEdge("e5-1", "5", "1", 0.7, "contains", "co-occurrence"),
-            createEdge("e5-2", "5", "2", 0.4, "mentions", "co-occurrence")
-        );
+            // Create sample edges
+            List<Map<String, Object>> edges = Arrays.asList(
+                createEdge("e1-2", "1", "2", 0.8, "processes", "default"),
+                createEdge("e1-3", "1", "3", 0.9, "extracts", "default"),
+                createEdge("e1-4", "1", "4", 0.7, "creates", "default"),
+                createEdge("e1-5", "1", "5", 0.8, "generates", "default"),
+                createEdge("e2-6", "2", "6", 0.6, "enables", "default"),
+                createEdge("e3-4", "3", "4", 0.7, "feeds", "default")
+            );
 
-        response.put("nodes", nodes);
-        response.put("edges", edges);
+            graphData.put("nodes", nodes);
+            graphData.put("edges", edges);
+            graphData.put("metadata", Map.of(
+                "totalNodes", nodes.size(),
+                "totalEdges", edges.size(),
+                "lastUpdated", System.currentTimeMillis()
+            ));
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(graphData);
+
+        } catch (Exception e) {
+            logger.error("Failed to generate graph data", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to generate graph data");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     // Helper methods
@@ -541,14 +561,13 @@ public class FrontendIntegrationController {
         return item;
     }
 
-    private Map<String, Object> createNode(String id, String label, String type, int frequency, String color) {
+    private Map<String, Object> createNode(String id, String label, String type, int size, int frequency) {
         Map<String, Object> node = new HashMap<>();
         node.put("id", id);
         node.put("label", label);
         node.put("type", type);
+        node.put("size", size);
         node.put("frequency", frequency);
-        node.put("size", Math.max(10, frequency / 2));
-        node.put("color", color);
         return node;
     }
 

@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import KnowledgeGraph from "@/components/KnowledgeGraph"
+import AdobeScript from '@/components/AdobeScript'
 import { 
   Upload, 
   FileText, 
