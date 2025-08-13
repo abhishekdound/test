@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -473,7 +474,173 @@ public class FrontendIntegrationController {
         }
     }
 
+    @PostMapping("/health")
+    public ResponseEntity<Map<String, Object>> healthPost() {
+        return ResponseEntity.ok(createHealthResponse());
+    }
+
+    @PostMapping("/analyze")
+    public ResponseEntity<Map<String, Object>> analyzeDocuments(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestParam(value = "persona", defaultValue = "student") String persona,
+            @RequestParam(value = "jobToBeDone", defaultValue = "analyze document") String jobToBeDone) {
+
+        try {
+            if (files == null || files.length == 0) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "No files uploaded");
+                errorResponse.put("status", "error");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // Generate a unique job ID
+            String jobId = UUID.randomUUID().toString();
+
+            // Create response
+            Map<String, Object> response = new HashMap<>();
+            response.put("jobId", jobId);
+            response.put("status", "processing");
+            response.put("message", "Files uploaded successfully");
+            response.put("fileCount", files.length);
+            response.put("persona", persona);
+            response.put("jobToBeDone", jobToBeDone);
+            response.put("timestamp", System.currentTimeMillis());
+
+            // Log the upload
+            logger.info("Received {} files for analysis with persona: {} and job: {}", 
+                       files.length, persona, jobToBeDone);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error processing document upload", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to process upload");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("status", "error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/find-related")
+    public ResponseEntity<Map<String, Object>> findRelated(@RequestBody Map<String, Object> request) {
+        try {
+            String content = (String) request.get("content");
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> documents = (List<Map<String, String>>) request.get("documents");
+
+            Map<String, Object> response = new HashMap<>();
+            List<Map<String, Object>> relatedSections = new ArrayList<>();
+
+            // Create mock related sections
+            Map<String, Object> section1 = new HashMap<>();
+            section1.put("id", "related-1");
+            section1.put("title", "Related Content Analysis");
+            section1.put("content", "Based on the document content, this section provides related insights and analysis.");
+            section1.put("similarity", 0.85);
+            section1.put("source", "Document Analysis");
+            relatedSections.add(section1);
+
+            Map<String, Object> section2 = new HashMap<>();
+            section2.put("id", "related-2");
+            section2.put("title", "Key Findings");
+            section2.put("content", "Additional findings and recommendations based on document analysis.");
+            section2.put("similarity", 0.72);
+            section2.put("source", "Content Analysis");
+            relatedSections.add(section2);
+
+            response.put("relatedSections", relatedSections);
+            response.put("status", "success");
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error finding related sections", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to find related sections");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/insights/{jobId}")
+    public ResponseEntity<Map<String, Object>> generateInsights(@PathVariable String jobId) {
+        try {
+            Map<String, Object> response = new HashMap<>();
+            List<Map<String, Object>> insights = new ArrayList<>();
+
+            // Create mock insights
+            Map<String, Object> insight1 = new HashMap<>();
+            insight1.put("id", "insight-1");
+            insight1.put("title", "Document Structure Analysis");
+            insight1.put("description", "The document shows well-organized content with clear sections and subsections.");
+            insight1.put("type", "analysis");
+            insight1.put("confidence", 0.9);
+            insights.add(insight1);
+
+            Map<String, Object> insight2 = new HashMap<>();
+            insight2.put("id", "insight-2");
+            insight2.put("title", "Content Recommendation");
+            insight2.put("description", "Consider adding more visual elements to enhance document readability.");
+            insight2.put("type", "recommendation");
+            insight2.put("confidence", 0.75);
+            insights.add(insight2);
+
+            response.put("insights", insights);
+            response.put("jobId", jobId);
+            response.put("status", "completed");
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error generating insights for job: " + jobId, e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to generate insights");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/podcast/{jobId}")
+    public ResponseEntity<Map<String, Object>> generatePodcast(@PathVariable String jobId) {
+        try {
+            Map<String, Object> response = new HashMap<>();
+
+            // Mock podcast response
+            response.put("audioUrl", "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+            response.put("transcript", "Welcome to the document analysis podcast. Today we're discussing the insights from your uploaded document...");
+            response.put("duration", "2:30");
+            response.put("jobId", jobId);
+            response.put("status", "completed");
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error generating podcast for job: " + jobId, e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to generate podcast");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
     // Helper methods
+
+    private Map<String, Object> createHealthResponse() {
+        Map<String, Object> health = new HashMap<>();
+        health.put("status", "UP");
+        health.put("timestamp", System.currentTimeMillis());
+        health.put("services", Map.of(
+            "database", "UP",
+            "fileStorage", "UP",
+            "adobe", "CONFIGURED"
+        ));
+        return health;
+    }
 
     private AdobeAnalysisResponse parseAnalysisResult(String resultJson) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();

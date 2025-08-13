@@ -2,32 +2,49 @@
 package com.adobe.hackathon.controller;
 
 import org.springframework.boot.web.servlet.error.ErrorController;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestController
+@Controller
 public class CustomErrorController implements ErrorController {
 
     @RequestMapping("/error")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-        Object message = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-        Object requestUri = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
         
-        response.put("success", false);
-        response.put("error", "An error occurred");
-        response.put("status", status != null ? status : 500);
-        response.put("message", message != null ? message.toString() : "Internal Server Error");
-        response.put("path", requestUri != null ? requestUri.toString() : request.getRequestURI());
+        if (status != null) {
+            Integer statusCode = Integer.valueOf(status.toString());
+            
+            response.put("status", statusCode);
+            response.put("error", HttpStatus.valueOf(statusCode).getReasonPhrase());
+            response.put("message", "An error occurred");
+            response.put("timestamp", System.currentTimeMillis());
+            
+            // Add path information
+            Object path = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+            if (path != null) {
+                response.put("path", path.toString());
+            }
+            
+            return ResponseEntity.status(statusCode).body(response);
+        }
+        
+        response.put("status", 500);
+        response.put("error", "Internal Server Error");
+        response.put("message", "An unexpected error occurred");
         response.put("timestamp", System.currentTimeMillis());
         
-        return ResponseEntity.status(status != null ? (Integer) status : 500).body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
