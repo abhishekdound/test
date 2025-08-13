@@ -18,7 +18,7 @@ args = "cd Backend && mvn spring-boot:run -Dspring-boot.run.arguments=\"--server
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd Frontend && npm run dev -- --hostname 0.0.0.0 --port 3000"
+args = "cd Frontend && npm run dev -- --hostname 0.0.0.0 --port=3000"
 
 [[workflows.workflow]]
 name = "Frontend Only"
