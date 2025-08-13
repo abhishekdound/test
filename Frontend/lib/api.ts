@@ -1,7 +1,4 @@
-
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-domain.com/api' 
-  : 'http://localhost:8080/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 export interface AnalysisResult {
   jobId: string
@@ -30,7 +27,7 @@ class APIService {
   private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 30000): Promise<Response> {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -75,7 +72,7 @@ class APIService {
   async getAnalysisStatus(jobId: string): Promise<AnalysisResult> {
     try {
       const response = await this.fetchWithTimeout(`${API_BASE_URL}/adobe/status/${jobId}`)
-      
+
       if (!response.ok) {
         throw new Error(`Status check failed: ${response.statusText}`)
       }
@@ -141,7 +138,7 @@ class APIService {
   async getPerformanceMetrics(): Promise<any> {
     try {
       const response = await this.fetchWithTimeout(`${API_BASE_URL}/adobe/performance`)
-      
+
       if (!response.ok) {
         throw new Error(`Performance metrics fetch failed: ${response.statusText}`)
       }
@@ -156,11 +153,95 @@ class APIService {
   // Health check method
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await this.fetchWithTimeout(`${API_BASE_URL}/health`, {}, 5000)
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/actuator/health`, {}, 5000)
       return response.ok
     } catch (error) {
       console.error('Health check failed:', error)
       return false
+    }
+  }
+
+  // Placeholder for extractText, findRelated, generateInsights, generatePodcast
+  // These methods will be implemented by the frontend to call their respective backend API endpoints.
+
+  extractText = async (formData: FormData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/extract-text`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Text extraction failed:', error)
+      throw error
+    }
+  }
+
+  findRelated = async (payload: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/find-related`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Find related failed:', error)
+      throw error
+    }
+  }
+
+  generateInsights = async (payload: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/generate-insights`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Generate insights failed:', error)
+      throw error
+    }
+  }
+
+  generatePodcast = async (payload: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/generate-podcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Generate podcast failed:', error)
+      throw error
     }
   }
 }

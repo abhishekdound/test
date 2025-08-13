@@ -5,7 +5,7 @@ modules = ["nodejs-20", "web", "bash"]
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Start Full Stack Application"
+runButton = "Start Full Stack"
 
 [[workflows.workflow]]
 name = "Start Full Stack"

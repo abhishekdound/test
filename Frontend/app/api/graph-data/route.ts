@@ -159,3 +159,113 @@ export async function GET() {
     )
   }
 }
+import { NextResponse } from 'next/server'
+
+interface ConceptNode {
+  id: string
+  label: string
+  type: "concept" | "document" | "topic"
+  size: number
+  color: string
+  document?: string
+  frequency: number
+}
+
+interface ConceptEdge {
+  id: string
+  source: string
+  target: string
+  weight: number
+  label: string
+  type: "co-occurrence" | "semantic" | "user-created"
+}
+
+interface GraphData {
+  nodes: ConceptNode[]
+  edges: ConceptEdge[]
+}
+
+export async function GET() {
+  try {
+    // For demonstration, return mock data
+    // In a real application, this would fetch from your backend
+    const mockGraphData: GraphData = {
+      nodes: [
+        {
+          id: "doc1",
+          label: "Machine Learning Guide",
+          type: "document",
+          size: 80,
+          color: "#ef4444",
+          frequency: 1
+        },
+        {
+          id: "doc2", 
+          label: "Data Science Handbook",
+          type: "document",
+          size: 80,
+          color: "#ef4444",
+          frequency: 1
+        },
+        {
+          id: "concept1",
+          label: "Neural Networks",
+          type: "concept",
+          size: 60,
+          color: "#3b82f6",
+          frequency: 15
+        },
+        {
+          id: "concept2",
+          label: "Data Processing",
+          type: "concept", 
+          size: 50,
+          color: "#3b82f6",
+          frequency: 8
+        },
+        {
+          id: "concept3",
+          label: "Algorithms",
+          type: "concept",
+          size: 45,
+          color: "#3b82f6",
+          frequency: 12
+        }
+      ],
+      edges: [
+        {
+          id: "edge1",
+          source: "doc1",
+          target: "concept1",
+          weight: 3,
+          label: "contains",
+          type: "co-occurrence"
+        },
+        {
+          id: "edge2",
+          source: "doc2",
+          target: "concept2",
+          weight: 2,
+          label: "discusses",
+          type: "co-occurrence"
+        },
+        {
+          id: "edge3",
+          source: "concept1",
+          target: "concept3",
+          weight: 1,
+          label: "related to",
+          type: "semantic"
+        }
+      ]
+    }
+
+    return NextResponse.json(mockGraphData)
+  } catch (error) {
+    console.error('Error fetching graph data:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch graph data' },
+      { status: 500 }
+    )
+  }
+}

@@ -25,36 +25,8 @@ import {
   Headphones
 } from "lucide-react"
 
-// Placeholder for the actual API service
-// In a real application, this would be imported from a dedicated file
-const apiService = {
-  healthCheck: async () => {
-    // Simulate a network request
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(true), 500); // Assume backend is healthy
-    });
-  },
-  extractText: async (formData: FormData) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { text: "Extracted text content..." };
-  },
-  findRelated: async (payload: any) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { relatedSections: [] };
-  },
-  generateInsights: async (payload: any) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { insights: [] };
-  },
-  generatePodcast: async (payload: any) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { audioUrl: "http://example.com/podcast.mp3" };
-  }
-};
+// Import the actual API service
+import { apiService } from '@/lib/api'
 
 
 interface Document {
