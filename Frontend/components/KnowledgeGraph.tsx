@@ -1,23 +1,13 @@
-"use client"
 
-import { useState, useEffect, useCallback } from "react"
-import ReactFlow, {
-  Node,
-  Edge,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  NodeTypes,
-  EdgeTypes,
-} from "reactflow"
-import "reactflow/dist/style.css"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+'use client'
+
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import { ReactFlow, useNodesState, useEdgesState, Controls, Background, Node, Edge, NodeTypes, Position } from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, RefreshCw, ZoomIn, ZoomOut, Target, Network, Brain } from "lucide-react"
+import { Loader2, RefreshCw, ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
 
 interface ConceptNode {
   id: string
@@ -43,56 +33,22 @@ interface GraphData {
   edges: ConceptEdge[]
 }
 
-// Custom node types for different concept types
+// Custom Node Component
 const CustomNode = ({ data }: { data: any }) => {
-  const getNodeStyle = () => {
-    switch (data.type) {
-      case "document":
-        return {
-          background: data.color,
-          border: "2px solid #ef4444",
-          borderRadius: "8px",
-          padding: "8px 12px",
-          fontSize: "12px",
-          fontWeight: "bold",
-          color: "white",
-          minWidth: "120px",
-          textAlign: "center" as const,
-        }
-      case "concept":
-        return {
-          background: data.color,
-          border: "2px solid #3b82f6",
-          borderRadius: "50%",
-          padding: "8px",
-          fontSize: "11px",
-          fontWeight: "600",
-          color: "white",
-          minWidth: `${data.size}px`,
-          minHeight: `${data.size}px`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center" as const,
-        }
-      default:
-        return {
-          background: "#6b7280",
-          border: "2px solid #374151",
-          borderRadius: "6px",
-          padding: "6px 10px",
-          fontSize: "11px",
-          color: "white",
-        }
-    }
-  }
-
   return (
-    <div style={getNodeStyle()}>
-      <div className="font-medium">{data.label}</div>
-      {data.type === "concept" && (
-        <div className="text-xs opacity-80">Freq: {data.frequency}</div>
-      )}
+    <div className={`px-4 py-2 shadow-md rounded-md bg-white border-2 ${
+      data.type === 'concept' ? 'border-blue-500' : 
+      data.type === 'document' ? 'border-green-500' : 
+      'border-purple-500'
+    }`}>
+      <div className="flex items-center">
+        <div className="ml-2">
+          <div className="text-lg font-bold">{data.label}</div>
+          <div className="text-gray-500 text-sm">
+            {data.type} • freq: {data.frequency}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -101,7 +57,7 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 }
 
-export default function KnowledgeGraph() {
+function KnowledgeGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -118,59 +74,65 @@ export default function KnowledgeGraph() {
     try {
       setIsLoading(true)
       setError(null)
-      
-      const response = await fetch("/api/graph-data")
-      if (!response.ok) {
-        throw new Error("Failed to fetch graph data")
-      }
-      
-      const data: GraphData = await response.json()
-      
-      // Convert to ReactFlow format
-      const flowNodes: Node[] = data.nodes.map((node) => ({
-        id: node.id,
-        type: "custom",
-        position: {
-          x: Math.random() * 800,
-          y: Math.random() * 600,
+
+      const response = await fetch('/api/graph-data', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        data: node,
-        style: {
-          width: node.type === "concept" ? node.size : "auto",
-          height: node.type === "concept" ? node.size : "auto",
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data: GraphData = await response.json()
+
+      // Transform nodes for React Flow
+      const flowNodes: Node[] = data.nodes.map((node, index) => ({
+        id: node.id,
+        type: 'custom',
+        position: {
+          x: Math.cos(index * 0.5) * 200 + 400,
+          y: Math.sin(index * 0.5) * 200 + 300,
+        },
+        data: {
+          label: node.label,
+          type: node.type,
+          frequency: node.frequency,
+          size: node.size,
+          color: node.color,
         },
       }))
-      
+
+      // Transform edges for React Flow
       const flowEdges: Edge[] = data.edges.map((edge) => ({
         id: edge.id,
         source: edge.source,
         target: edge.target,
         label: edge.label,
-        type: "smoothstep",
-        style: {
-          stroke: edge.type === "co-occurrence" ? "#3b82f6" : "#ef4444",
-          strokeWidth: Math.max(1, edge.weight),
-        },
-        labelStyle: {
-          fill: "#6b7280",
-          fontSize: "10px",
-          fontWeight: "500",
-        },
+        type: 'smoothstep',
+        style: { strokeWidth: Math.max(1, edge.weight * 3) },
+        labelStyle: { fontSize: 12, fontWeight: 'bold' },
       }))
-      
+
       setNodes(flowNodes)
       setEdges(flowEdges)
+
+      // Update stats
+      const concepts = data.nodes.filter(n => n.type === 'concept').length
+      const documents = data.nodes.filter(n => n.type === 'document').length
       
-      // Calculate stats
       setGraphStats({
         totalNodes: data.nodes.length,
         totalEdges: data.edges.length,
-        concepts: data.nodes.filter(n => n.type === "concept").length,
-        documents: data.nodes.filter(n => n.type === "document").length,
+        concepts,
+        documents,
       })
-      
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      console.error('Failed to fetch graph data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load graph data')
     } finally {
       setIsLoading(false)
     }
@@ -180,11 +142,6 @@ export default function KnowledgeGraph() {
     fetchGraphData()
   }, [fetchGraphData])
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  )
-
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node)
   }, [])
@@ -193,165 +150,120 @@ export default function KnowledgeGraph() {
     setSelectedNode(null)
   }, [])
 
-  const handleRefresh = () => {
-    fetchGraphData()
-  }
-
   if (error) {
     return (
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="w-full h-96">
         <CardHeader>
-          <CardTitle className="text-white text-lg">Knowledge Graph Error</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            Knowledge Graph - Error
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <div className="text-red-400 mb-4">{error}</div>
-            <Button onClick={handleRefresh} className="bg-red-600 hover:bg-red-700">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry
-            </Button>
-          </div>
+        <CardContent className="flex flex-col items-center justify-center h-64">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={fetchGraphData} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Brain className="w-6 h-6 text-purple-400" />
-            <CardTitle className="text-white text-lg">Knowledge Graph</CardTitle>
-            <Badge variant="secondary" className="bg-purple-600/20 text-purple-400 border-purple-600/30">
-              AI Generated
-            </Badge>
-          </div>
-          
-          <div className="flex items-center space-x-2">
+    <div className="w-full space-y-4">
+      {/* Graph Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{graphStats.totalNodes}</div>
+            <p className="text-sm text-muted-foreground">Total Nodes</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{graphStats.totalEdges}</div>
+            <p className="text-sm text-muted-foreground">Connections</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{graphStats.concepts}</div>
+            <p className="text-sm text-muted-foreground">Concepts</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{graphStats.documents}</div>
+            <p className="text-sm text-muted-foreground">Documents</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Graph Container */}
+      <Card className="w-full h-96">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Knowledge Graph</CardTitle>
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleRefresh}
+              onClick={fetchGraphData}
               disabled={isLoading}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4" />
               )}
               Refresh
             </Button>
           </div>
-        </div>
-        
-        {/* Graph Statistics */}
-        <div className="flex items-center space-x-4 mt-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Network className="w-4 h-4" />
-            <span>{graphStats.totalNodes} Nodes</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Target className="w-4 h-4" />
-            <span>{graphStats.totalEdges} Connections</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Brain className="w-4 h-4" />
-            <span>{graphStats.concepts} Concepts</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            <span>{graphStats.documents} Documents</span>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="relative">
-          {isLoading && (
-            <div className="absolute inset-0 bg-gray-800/80 flex items-center justify-center z-10">
+        </CardHeader>
+        <CardContent className="p-0 h-80 relative">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
-                <p className="text-gray-300">Building knowledge graph...</p>
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading knowledge graph...</p>
               </div>
             </div>
-          )}
-          
-          <div className="h-96 w-full border border-gray-600 rounded-lg overflow-hidden">
+          ) : (
             <ReactFlow
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
               onNodeClick={onNodeClick}
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               fitView
-              attributionPosition="bottom-left"
-              className="bg-gray-900"
+              fitViewOptions={{ padding: 0.2 }}
+              className="bg-gray-50 dark:bg-gray-900"
             >
-              <Background color="#374151" gap={20} />
-              <Controls className="bg-gray-800 border-gray-600" />
+              <Controls />
+              <Background />
             </ReactFlow>
-          </div>
-          
-          {/* Node Information Panel */}
-          {selectedNode && (
-            <div className="mt-4 p-4 bg-gray-700 rounded-lg border border-gray-600">
-              <h4 className="font-semibold text-white mb-2">Node Details</h4>
-              <div className="space-y-2 text-sm text-gray-300">
-                <div className="flex justify-between">
-                  <span>Type:</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {selectedNode.data.type}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span>Label:</span>
-                  <span className="text-white">{selectedNode.data.label}</span>
-                </div>
-                {selectedNode.data.frequency && (
-                  <div className="flex justify-between">
-                    <span>Frequency:</span>
-                    <span className="text-white">{selectedNode.data.frequency}</span>
-                  </div>
-                )}
-                {selectedNode.data.document && (
-                  <div className="flex justify-between">
-                    <span>Document:</span>
-                    <span className="text-white">{selectedNode.data.document}</span>
-                  </div>
-                )}
-              </div>
-            </div>
           )}
-          
-          {/* Legend */}
-          <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
-            <h5 className="font-medium text-white text-sm mb-2">Legend</h5>
-            <div className="flex items-center space-x-4 text-xs text-gray-400">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded"></div>
-                <span>Documents</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span>Concepts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500"></div>
-                <span>Co-occurrence</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-red-500"></div>
-                <span>Semantic</span>
-              </div>
+        </CardContent>
+      </Card>
+
+      {/* Selected Node Info */}
+      {selectedNode && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Node Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div><strong>Label:</strong> {selectedNode.data.label}</div>
+              <div><strong>Type:</strong> <Badge variant="outline">{selectedNode.data.type}</Badge></div>
+              <div><strong>Frequency:</strong> {selectedNode.data.frequency}</div>
             </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
-} 
+}
+
+export default KnowledgeGraph

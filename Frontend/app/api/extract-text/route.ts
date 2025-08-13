@@ -1,61 +1,30 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const formData = await request.formData()
-    const file = formData.get("file") as File
+    const file = formData.get('file') as File
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // For now, return a mock response to get the app working
-    // In production, you'd want to implement proper PDF text extraction
-    const mockText = `This is a sample PDF content for demonstration purposes. 
-    
-    The Adobe Learn platform is designed to provide intelligent document analysis and learning capabilities.
-    
-    Key features include:
-    - PDF text extraction and analysis
-    - AI-powered insights generation
-    - Related content discovery
-    - Podcast generation from documents
-    
-    This mock response allows the application to function while we implement proper PDF processing.`
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 })
+    }
 
-    const pages = [
-      {
-        pageNumber: 1,
-        text: mockText,
-        sections: [
-          {
-            title: "Introduction",
-            content: "This is a sample PDF content for demonstration purposes.",
-            startY: 0
-          },
-          {
-            title: "Key Features",
-            content: "The Adobe Learn platform is designed to provide intelligent document analysis and learning capabilities.",
-            startY: 100
-          },
-          {
-            title: "Capabilities",
-            content: "Key features include PDF text extraction, AI insights, related content discovery, and podcast generation.",
-            startY: 200
-          }
-        ]
-      }
-    ]
+    // Mock text extraction - in production, use proper PDF parsing
+    const mockText = `Extracted text from ${file.name}. This is a comprehensive document about Adobe's innovative solutions and technologies. The document covers various aspects including artificial intelligence, machine learning, digital experiences, and creative tools. The content includes detailed analysis of market trends, technical specifications, implementation strategies, and best practices for enterprise solutions.`
 
-    const fullText = pages.map((page: any) => page.text).join("\n\n")
-
-    return NextResponse.json({
-      pages,
-      fullText,
-      totalPages: pages.length,
+    return NextResponse.json({ 
+      text: mockText,
+      filename: file.name,
+      size: file.size,
+      status: 'success'
     })
   } catch (error) {
-    console.error("PDF extraction error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Text extraction error:', error)
+    return NextResponse.json({ error: 'Failed to extract text' }, { status: 500 })
   }
 }
