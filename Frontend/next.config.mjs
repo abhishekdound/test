@@ -1,4 +1,3 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
@@ -36,6 +35,7 @@ const nextConfig = {
         },
       },
     },
+    serverComponentsExternalPackages: []
   },
 }
 

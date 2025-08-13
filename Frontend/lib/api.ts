@@ -145,3 +145,7 @@ class ApiService {
     }
   }
 }
+
+// Export the service instance
+export const apiService = new ApiService()
+export default apiService

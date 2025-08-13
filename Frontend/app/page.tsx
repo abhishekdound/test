@@ -89,7 +89,6 @@ export default function AdobeLearnPlatform() {
         setBackendHealthy(false)
         console.error('Backend health check failed:', error)
         // Still allow frontend to work with mock data
-        setBackendHealthy(true)
         toast({
           title: "Using Mock Data",
           description: "Backend unavailable, using sample data for demonstration.",
@@ -98,6 +97,11 @@ export default function AdobeLearnPlatform() {
     }
 
     checkBackendHealth()
+
+    // Set up periodic health checks
+    const healthInterval = setInterval(checkBackendHealth, 30000) // Every 30 seconds
+
+    return () => clearInterval(healthInterval)
   }, [toast])
 
 
@@ -106,42 +110,70 @@ export default function AdobeLearnPlatform() {
     if (!files || files.length === 0) return
 
     setIsAnalyzing(true)
+    setProgress(0)
 
     try {
-      for (const file of Array.from(files)) {
-        const formData = new FormData()
-        formData.append('file', file)
+      const formData = new FormData()
+      Array.from(files).forEach(file => {
+        formData.append('files', file)
+      })
 
-        // Simulate API call
-        const data = await apiService.extractText(formData);
+      // Show progress during upload
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 10, 90))
+      }, 200)
 
-        const newDocument: Document = {
-          id: `doc-${Date.now()}-${Math.random()}`,
+      const result = await apiService.analyzeDocuments(formData, 'student', 'analyze document')
+
+      clearInterval(progressInterval)
+      setProgress(100)
+
+      if (result.jobId) {
+        setCurrentJobId(result.jobId)
+
+        // Add documents to state
+        const newDocuments = Array.from(files).map(file => ({
+          id: `${Date.now()}-${file.name}`,
           name: file.name,
-          content: data.text || 'No text extracted',
+          content: `Analysis completed for ${file.name}`,
           uploadedAt: new Date(),
-          jobId: data.jobId // Assuming API returns a jobId
-        }
+          jobId: result.jobId
+        }))
 
-        setDocuments(prev => [...prev, newDocument])
+        setDocuments(prev => [...prev, ...newDocuments])
+
+        toast({
+          title: "Files uploaded successfully",
+          description: `${files.length} file(s) analyzed successfully`,
+        })
+
+        setActiveTab("analysis")
       }
-
-      toast({
-        title: "Upload Successful",
-        description: `${files.length} document(s) processed successfully`,
-      })
-
-      setActiveTab('documents')
     } catch (error) {
+      console.error('Upload failed:', error)
       toast({
-        title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Failed to process documents",
-        variant: "destructive",
+        title: backendHealthy ? "Upload failed" : "Backend unavailable",
+        description: backendHealthy ? "Please try again" : "Using fallback mode",
+        variant: backendHealthy ? "destructive" : "default",
       })
+
+      // Add fallback documents even if backend fails
+      if (!backendHealthy) {
+        const fallbackDocuments = Array.from(files).map(file => ({
+          id: `fallback-${Date.now()}-${file.name}`,
+          name: file.name,
+          content: `Mock analysis for ${file.name}. This document contains valuable information about Adobe's innovative solutions.`,
+          uploadedAt: new Date(),
+          jobId: `mock-${Date.now()}`
+        }))
+
+        setDocuments(prev => [...prev, ...fallbackDocuments])
+        setActiveTab("analysis")
+      }
     } finally {
       setIsAnalyzing(false)
     }
-  }, [toast])
+  }, [toast, backendHealthy])
 
   const analyzeDocument = useCallback(async (document: Document) => {
     setIsAnalyzing(true)

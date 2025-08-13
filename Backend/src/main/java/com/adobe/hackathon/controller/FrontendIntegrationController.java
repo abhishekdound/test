@@ -17,71 +17,6 @@ import java.util.*;
 /**
  * Controller specifically designed for frontend integration with Adobe Challenge requirements
  * Provides endpoints that match the expected frontend API structure
-
-
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> healthCheck() {
-        Map<String, Object> health = new HashMap<>();
-        health.put("status", "healthy");
-        health.put("timestamp", new Date());
-        health.put("service", "Adobe Challenge Backend");
-        return ResponseEntity.ok(health);
-    }
-
-
-    @GetMapping("/graph-data")
-    public ResponseEntity<Map<String, Object>> getGraphData() {
-        Map<String, Object> graphData = new HashMap<>();
-        
-        // Create sample nodes
-        List<Map<String, Object>> nodes = Arrays.asList(
-            createNode("1", "Machine Learning", "concept", 85, "#3B82F6"),
-            createNode("2", "Data Science", "concept", 92, "#10B981"),
-            createNode("3", "Adobe Analytics", "document", 78, "#F59E0B"),
-            createNode("4", "AI Integration", "concept", 89, "#8B5CF6"),
-            createNode("5", "User Experience", "topic", 73, "#EF4444"),
-            createNode("6", "Creative Cloud", "document", 95, "#06B6D4")
-        );
-        
-        // Create sample edges
-        List<Map<String, Object>> edges = Arrays.asList(
-            createEdge("e1-2", "1", "2", 0.8, "related to"),
-            createEdge("e1-3", "1", "3", 0.6, "used in"),
-            createEdge("e2-6", "2", "6", 0.7, "supports"),
-            createEdge("e3-4", "3", "4", 0.9, "implements"),
-            createEdge("e5-1", "5", "1", 0.5, "enhanced by"),
-            createEdge("e5-2", "5", "2", 0.4, "improved by")
-        );
-        
-        graphData.put("nodes", nodes);
-        graphData.put("edges", edges);
-        
-        return ResponseEntity.ok(graphData);
-    }
-    
-    private Map<String, Object> createNode(String id, String label, String type, int frequency, String color) {
-        Map<String, Object> node = new HashMap<>();
-        node.put("id", id);
-        node.put("label", label);
-        node.put("type", type);
-        node.put("frequency", frequency);
-        node.put("size", Math.max(20, frequency / 3));
-        node.put("color", color);
-        return node;
-    }
-    
-    private Map<String, Object> createEdge(String id, String source, String target, double weight, String label) {
-        Map<String, Object> edge = new HashMap<>();
-        edge.put("id", id);
-        edge.put("source", source);
-        edge.put("target", target);
-        edge.put("weight", weight);
-        edge.put("label", label);
-        edge.put("type", "semantic");
-        return edge;
-    }
-
-
  */
 @RestController
 @RequestMapping("/api/frontend")
@@ -473,6 +408,51 @@ public class FrontendIntegrationController {
         return ResponseEntity.ok(demoData);
     }
 
+    /**
+     * Health check endpoint
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> healthCheck() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "healthy");
+        response.put("timestamp", System.currentTimeMillis());
+        response.put("service", "Adobe Challenge Backend");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get graph data for visualization
+     */
+    @GetMapping("/graph-data")
+    public ResponseEntity<Map<String, Object>> getGraphData() {
+        Map<String, Object> response = new HashMap<>();
+
+        // Create mock nodes
+        List<Map<String, Object>> nodes = Arrays.asList(
+            createNode("1", "Adobe Creative Suite", "concept", 45, "#3b82f6"),
+            createNode("2", "PDF Processing", "concept", 38, "#10b981"),
+            createNode("3", "Document Analysis", "concept", 42, "#8b5cf6"),
+            createNode("4", "Machine Learning", "concept", 35, "#f59e0b"),
+            createNode("5", "Document 1", "document", 50, "#ef4444"),
+            createNode("6", "Text Extraction", "concept", 28, "#06b6d4")
+        );
+
+        // Create mock edges
+        List<Map<String, Object>> edges = Arrays.asList(
+            createEdge("e1-2", "1", "2", 0.8, "related", "semantic"),
+            createEdge("e1-3", "1", "3", 0.6, "part of", "semantic"),
+            createEdge("e2-6", "2", "6", 0.9, "subset", "semantic"),
+            createEdge("e3-4", "3", "4", 0.5, "uses", "co-occurrence"),
+            createEdge("e5-1", "5", "1", 0.7, "contains", "co-occurrence"),
+            createEdge("e5-2", "5", "2", 0.4, "mentions", "co-occurrence")
+        );
+
+        response.put("nodes", nodes);
+        response.put("edges", edges);
+
+        return ResponseEntity.ok(response);
+    }
+
     // Helper methods
 
     private AdobeAnalysisResponse parseAnalysisResult(String resultJson) throws Exception {
@@ -559,5 +539,27 @@ public class FrontendIntegrationController {
         item.put("snippet", "Related content snippet for " + title.toLowerCase() + "...");
         item.put("navigationUrl", "/document/demo/page/" + page + "#section-" + id);
         return item;
+    }
+
+    private Map<String, Object> createNode(String id, String label, String type, int frequency, String color) {
+        Map<String, Object> node = new HashMap<>();
+        node.put("id", id);
+        node.put("label", label);
+        node.put("type", type);
+        node.put("frequency", frequency);
+        node.put("size", Math.max(10, frequency / 2));
+        node.put("color", color);
+        return node;
+    }
+
+    private Map<String, Object> createEdge(String id, String source, String target, double weight, String label, String type) {
+        Map<String, Object> edge = new HashMap<>();
+        edge.put("id", id);
+        edge.put("source", source);
+        edge.put("target", target);
+        edge.put("weight", weight);
+        edge.put("label", label);
+        edge.put("type", type);
+        return edge;
     }
 }
