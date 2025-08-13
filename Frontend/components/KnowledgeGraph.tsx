@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -11,13 +12,12 @@ import ReactFlow, {
   addEdge,
   Connection,
   NodeTypes,
-  EdgeTypes,
 } from "reactflow"
 import "reactflow/dist/style.css"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, RefreshCw, ZoomIn, ZoomOut, Target, Network, Brain } from "lucide-react"
+import { Loader2, RefreshCw, Network, Brain } from "lucide-react"
 
 interface ConceptNode {
   id: string
@@ -43,7 +43,7 @@ interface GraphData {
   edges: ConceptEdge[]
 }
 
-// Custom node types for different concept types
+// Custom node component
 const CustomNode = ({ data }: { data: any }) => {
   const getNodeStyle = () => {
     switch (data.type) {
@@ -246,14 +246,12 @@ function KnowledgeGraph() {
           </div>
         </div>
 
-        {/* Graph Statistics */}
         <div className="flex items-center space-x-4 mt-4">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <Network className="w-4 h-4" />
             <span>{graphStats.totalNodes} Nodes</span>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Target className="w-4 h-4" />
             <span>{graphStats.totalEdges} Connections</span>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -297,7 +295,6 @@ function KnowledgeGraph() {
             </ReactFlow>
           </div>
 
-          {/* Node Information Panel */}
           {selectedNode && (
             <div className="mt-4 p-4 bg-gray-700 rounded-lg border border-gray-600">
               <h4 className="font-semibold text-white mb-2">Node Details</h4>
@@ -328,7 +325,6 @@ function KnowledgeGraph() {
             </div>
           )}
 
-          {/* Legend */}
           <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
             <h5 className="font-medium text-white text-sm mb-2">Legend</h5>
             <div className="flex items-center space-x-4 text-xs text-gray-400">

@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 
 interface ConceptNode {
@@ -27,97 +28,82 @@ interface GraphData {
 // Mock concept extraction function
 function extractConcepts(text: string): ConceptNode[] {
   const concepts = [
-    'artificial intelligence', 'machine learning', 'neural networks', 'deep learning',
-    'data science', 'algorithms', 'statistics', 'programming', 'python', 'analysis'
+    "Machine Learning", "Artificial Intelligence", "Neural Networks", 
+    "Data Science", "Deep Learning", "Computer Vision", "Natural Language Processing",
+    "Algorithms", "Statistics", "Python", "TensorFlow", "PyTorch"
   ]
-
+  
   return concepts.map((concept, index) => ({
     id: `concept-${index}`,
     label: concept,
     type: "concept" as const,
-    size: Math.floor(Math.random() * 50) + 30,
-    color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`,
-    frequency: Math.floor(Math.random() * 20) + 1
+    size: 60 + Math.random() * 40,
+    color: `hsl(${200 + index * 15}, 70%, 50%)`,
+    frequency: Math.floor(Math.random() * 50) + 10
   }))
 }
 
 // Mock document nodes
 function createDocumentNodes(): ConceptNode[] {
   const documents = [
-    'AI Fundamentals.pdf',
-    'Machine Learning Guide.pdf',
-    'Data Science Handbook.pdf'
+    "ML_Fundamentals.pdf", 
+    "Deep_Learning_Guide.pdf", 
+    "Data_Science_Handbook.pdf",
+    "AI_Ethics.pdf"
   ]
-
+  
   return documents.map((doc, index) => ({
     id: `doc-${index}`,
     label: doc,
     type: "document" as const,
     size: 80,
-    color: '#ef4444',
+    color: `hsl(${0 + index * 20}, 80%, 50%)`,
     document: doc,
-    frequency: 1
+    frequency: Math.floor(Math.random() * 30) + 20
   }))
 }
 
-// Mock edges creation
+// Mock edge creation
 function createEdges(nodes: ConceptNode[]): ConceptEdge[] {
   const edges: ConceptEdge[] = []
-  const concepts = nodes.filter(n => n.type === 'concept')
-  const documents = nodes.filter(n => n.type === 'document')
-
-  // Connect concepts to documents
-  documents.forEach(doc => {
-    const numConnections = Math.floor(Math.random() * 3) + 2
-    const connectedConcepts = concepts.slice(0, numConnections)
-
-    connectedConcepts.forEach(concept => {
-      edges.push({
-        id: `edge-${doc.id}-${concept.id}`,
-        source: doc.id,
-        target: concept.id,
-        weight: Math.floor(Math.random() * 3) + 1,
-        label: 'contains',
-        type: 'semantic'
-      })
-    })
-  })
-
-  // Connect concepts to each other
-  for (let i = 0; i < concepts.length - 1; i++) {
-    if (Math.random() > 0.7) {
-      edges.push({
-        id: `edge-${concepts[i].id}-${concepts[i + 1].id}`,
-        source: concepts[i].id,
-        target: concepts[i + 1].id,
-        weight: Math.floor(Math.random() * 2) + 1,
-        label: 'related',
-        type: 'co-occurrence'
-      })
+  
+  for (let i = 0; i < nodes.length - 1; i++) {
+    for (let j = i + 1; j < Math.min(i + 3, nodes.length); j++) {
+      if (Math.random() > 0.7) {
+        edges.push({
+          id: `edge-${i}-${j}`,
+          source: nodes[i].id,
+          target: nodes[j].id,
+          weight: Math.random() * 3 + 1,
+          label: `${Math.floor(Math.random() * 100)}%`,
+          type: Math.random() > 0.5 ? "co-occurrence" : "semantic"
+        })
+      }
     }
   }
-
+  
   return edges
 }
 
 export async function GET() {
   try {
-    // In a real implementation, this would extract concepts from uploaded documents
-    const mockText = "This is a sample document about artificial intelligence and machine learning..."
-
-    const conceptNodes = extractConcepts(mockText)
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Generate mock graph data
+    const conceptNodes = extractConcepts("Sample text for concept extraction")
     const documentNodes = createDocumentNodes()
-    const allNodes = [...documentNodes, ...conceptNodes]
+    const allNodes = [...conceptNodes, ...documentNodes]
     const edges = createEdges(allNodes)
-
+    
     const graphData: GraphData = {
       nodes: allNodes,
       edges: edges
     }
-
+    
     return NextResponse.json(graphData)
   } catch (error) {
-    console.error('Error generating graph data:', error)
+    console.error('Graph data generation error:', error)
     return NextResponse.json(
       { error: 'Failed to generate graph data' },
       { status: 500 }

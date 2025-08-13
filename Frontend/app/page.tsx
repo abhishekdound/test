@@ -97,7 +97,7 @@ export default function AdobeLearnPlatform() {
     }
 
     checkBackendHealth()
-  }, [toast])
+  }, [])
 
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
