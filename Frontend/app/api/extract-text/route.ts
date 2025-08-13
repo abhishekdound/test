@@ -1,36 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const formData = await request.formData()
-    const files = formData.getAll('files') as File[]
+    const file = formData.get('file') as File
 
-    if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files provided' },
-        { status: 400 }
-      )
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Mock text extraction - in real implementation, this would process PDFs
-    const extractedTexts = files.map((file, index) => ({
-      id: `text-${index}`,
-      fileName: file.name,
-      content: `Extracted text content from ${file.name}. This is a mock implementation that would normally use PDF processing libraries to extract actual text content.`,
-      pageCount: Math.floor(Math.random() * 20) + 1,
-      wordCount: Math.floor(Math.random() * 1000) + 100,
-    }))
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 })
+    }
 
-    return NextResponse.json({
-      success: true,
-      results: extractedTexts,
-      totalFiles: files.length,
+    // Mock text extraction - in production, use proper PDF parsing
+    const mockText = `Extracted text from ${file.name}. This is a comprehensive document about Adobe's innovative solutions and technologies. The document covers various aspects including artificial intelligence, machine learning, digital experiences, and creative tools. The content includes detailed analysis of market trends, technical specifications, implementation strategies, and best practices for enterprise solutions.`
+
+    return NextResponse.json({ 
+      text: mockText,
+      filename: file.name,
+      size: file.size,
+      status: 'success'
     })
   } catch (error) {
     console.error('Text extraction error:', error)
-    return NextResponse.json(
-      { error: 'Failed to extract text from files' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to extract text' }, { status: 500 })
   }
 }

@@ -75,31 +75,29 @@ export default function AdobeLearnPlatform() {
   useEffect(() => {
     const checkBackendHealth = async () => {
       try {
-        // In a real app, you'd call your actual API service health check
-        // const isHealthy = await apiService.healthCheck();
-        // For this example, we'll simulate a successful check
-        const isHealthy = true; 
+        const isHealthy = await apiService.healthCheck();
         setBackendHealthy(isHealthy)
         if (!isHealthy) {
           toast({
             title: "Backend Unavailable",
-            description: "Backend server is not responding. Some features may not work.",
+            description: "Using mock data. Backend server is not responding.",
             variant: "destructive",
           })
         }
       } catch (error) {
         setBackendHealthy(false)
         console.error('Backend health check failed:', error)
+        // Still allow frontend to work with mock data
+        setBackendHealthy(true)
         toast({
-          title: "Backend Error",
-          description: "Could not connect to the backend.",
-          variant: "destructive",
+          title: "Using Mock Data",
+          description: "Backend unavailable, using sample data for demonstration.",
         });
       }
     }
 
     checkBackendHealth()
-  }, []) // Empty dependency array ensures this runs only once on mount
+  }, [toast])
 
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {

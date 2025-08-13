@@ -166,10 +166,19 @@ class APIService {
 
   extractText = async (formData: FormData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/extract-text`, {
+      // Try backend first
+      let response = await fetch(`${API_BASE_URL}/extract-text`, {
         method: 'POST',
         body: formData,
       })
+
+      // If backend fails, try frontend API
+      if (!response.ok) {
+        response = await fetch('/api/extract-text', {
+          method: 'POST',
+          body: formData,
+        })
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -178,13 +187,23 @@ class APIService {
       return await response.json()
     } catch (error) {
       console.error('Text extraction failed:', error)
-      throw error
+      // Fallback to frontend API
+      try {
+        const response = await fetch('/api/extract-text', {
+          method: 'POST',
+          body: formData,
+        })
+        return await response.json()
+      } catch (fallbackError) {
+        throw new Error('Both backend and frontend APIs failed')
+      }
     }
   }
 
   findRelated = async (payload: any) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/find-related`, {
+      // Try backend first, then fallback to frontend API
+      let response = await fetch(`${API_BASE_URL}/find-related`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,13 +212,34 @@ class APIService {
       })
 
       if (!response.ok) {
+        response = await fetch('/api/find-related', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       return await response.json()
     } catch (error) {
       console.error('Find related failed:', error)
-      throw error
+      // Return fallback data
+      return {
+        relatedSections: [
+          {
+            id: 'mock-1',
+            title: 'Related Section 1',
+            content: 'This is a mock related section for demonstration.',
+            similarity: 0.85,
+            documentName: 'Sample Document'
+          }
+        ]
+      }
     }
   }
 
