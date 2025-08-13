@@ -2,8 +2,8 @@
 'use client'
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
-import { ReactFlow, useNodesState, useEdgesState, Controls, Background, Node, Edge, NodeTypes, Position } from 'reactflow'
-import 'reactflow/dist/style.css'
+import { ReactFlow, useNodesState, useEdgesState, Controls, Background, Node, Edge, NodeTypes, Position } from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -75,7 +75,7 @@ function KnowledgeGraph() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('/api/graph-data', {
+      const response = await fetch('http://localhost:8080/api/frontend/graph-data', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

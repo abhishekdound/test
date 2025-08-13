@@ -9,7 +9,7 @@ class ApiService {
 
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/analysis/health`)
+      const response = await fetch(`${this.baseUrl}/api/frontend/health`)
       return response.ok
     } catch (error) {
       console.error('Health check failed:', error)
@@ -22,7 +22,7 @@ class ApiService {
       formData.append('persona', persona)
       formData.append('jobToBeDone', jobToBeDone)
 
-      const response = await fetch(`${this.baseUrl}/api/adobe/analyze`, {
+      const response = await fetch(`${this.baseUrl}/api/frontend/analyze`, {
         method: 'POST',
         body: formData,
       })
