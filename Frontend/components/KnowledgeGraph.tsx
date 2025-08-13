@@ -101,7 +101,7 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 }
 
-export default function KnowledgeGraph() {
+function KnowledgeGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -357,4 +357,3 @@ export default function KnowledgeGraph() {
 }
 
 export default KnowledgeGraph
-export { KnowledgeGraph }

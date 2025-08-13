@@ -1,133 +1,51 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { callLLM } from "@/lib/llm-client"
-import { generateAudio } from "@/lib/tts-client"
-
-export async function POST(request: NextRequest) {
-  try {
-    const { documentText, documentName, relatedSections, insights } = await request.json()
-
-    if (!documentText) {
-      return NextResponse.json({ error: "Document text is required" }, { status: 400 })
-    }
-
-    try {
-      // Generate podcast script using LLM
-      const podcastScript = await generatePodcastScript(documentText, documentName, relatedSections, insights)
-
-      if (!podcastScript) {
-        throw new Error("Failed to generate podcast script")
-      }
-
-      // Convert script to audio using TTS
-      const audioResult = await generateAudio(podcastScript)
-
-      if (audioResult.error) {
-        throw new Error(audioResult.error)
-      }
-
-      if (!audioResult.audioBuffer) {
-        throw new Error("Failed to generate audio")
-      }
-
-      // Convert audio buffer to base64 for response
-      const audioBase64 = Buffer.from(audioResult.audioBuffer).toString("base64")
-
-      return NextResponse.json({
-        script: podcastScript,
-        audioData: audioBase64,
-        duration: estimateDuration(podcastScript),
-      })
-    } catch (error) {
-      console.log("AI podcast generation failed, using mock response:", error)
-      
-      // Provide mock podcast data for demo purposes
-      const mockScript = `Welcome to Adobe Learn, your AI-powered learning companion. Today we're exploring the fascinating world of document analysis and intelligent learning systems.
-      
-      This document introduces fundamental principles that form the backbone of modern AI systems. The techniques described here were first developed in the 1980s but gained prominence with increased computational power.
-      
-      These foundational concepts are directly applicable to current machine learning and deep learning implementations. Understanding these principles is crucial for developing next-generation AI systems and applications.
-      
-      Thank you for joining us on this learning journey. Remember, the future of AI is built on understanding these core concepts.`
-      
-      return NextResponse.json({
-        script: mockScript,
-        audioData: null, // No audio for mock
-        duration: estimateDuration(mockScript),
-        mock: true
-      })
-    }
-  } catch (error) {
-    console.error("Podcast generation error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-async function generatePodcastScript(
-  documentText: string,
-  documentName: string,
-  relatedSections: any[],
-  insights: any[],
-): Promise<string> {
-  const relatedContext =
-    relatedSections.length > 0
-      ? `\n\nRelated content from other documents:\n${relatedSections.map((s) => `- ${s.title}: ${s.preview}`).join("\n")}`
-      : ""
-
-  const insightsContext =
-    insights.length > 0 ? `\n\nKey insights:\n${insights.map((i) => `- ${i.title}: ${i.content}`).join("\n")}` : ""
-
-  const prompt = `Create a 2-5 minute podcast script for an AI-narrated overview of this document. The script should be conversational, engaging, and informative.
-
-Document: ${documentName}
-Content: ${documentText.substring(0, 3000)}${relatedContext}${insightsContext}
-
-Structure the podcast as follows:
-1. Brief introduction (15-20 seconds)
-2. Main content summary (2-3 minutes)
-3. Key insights and connections (1-2 minutes)
-4. Conclusion with takeaways (15-20 seconds)
-
-Guidelines:
-- Write in a natural, conversational tone suitable for audio
-- Use transitions between sections
-- Highlight the most important points
-- Include connections to related content when relevant
-- Keep sentences clear and not too long for speech
-- Target 300-400 words total (approximately 2-3 minutes when spoken)
-
-Return only the script text, no additional formatting or metadata.`
-
-  const llmResponse = await callLLM(prompt)
-
-  if (llmResponse.error) {
-    throw new Error(llmResponse.error)
-  }
-
-  return llmResponse.content.trim()
-}
-
-function estimateDuration(script: string): number {
-  // Estimate duration based on word count (average 150 words per minute)
-  const wordCount = script.split(/\s+/).length
-  return Math.ceil((wordCount / 150) * 60) // Return duration in seconds
-}
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { document, insights } = await request.json()
-    
-    // Mock podcast generation - in production, you'd use TTS services
-    const mockAudioUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA'
-    
-    return NextResponse.json({ 
-      audioUrl: mockAudioUrl,
-      duration: 180, // 3 minutes
-      title: `${document.name} - Audio Overview`,
-      description: 'AI-generated podcast from your document analysis'
+    const body = await request.json()
+    const { documentIds, style = 'educational', duration = 'medium' } = body
+
+    // Mock podcast generation
+    const podcastData = {
+      id: `podcast-${Date.now()}`,
+      title: 'AI Learning Insights Podcast',
+      description: 'An AI-generated podcast discussing key concepts from your uploaded documents',
+      status: 'ready',
+      audioUrl: '/api/podcast/audio/mock-podcast.mp3', // This would be a real audio file
+      duration: 420, // 7 minutes in seconds
+      transcript: `
+Welcome to your personalized AI Learning Podcast. Today we'll be exploring the fascinating world of machine learning and data science based on your uploaded documents.
+
+First, let's talk about the fundamentals of machine learning. Machine learning, as defined in your documents, is a subset of artificial intelligence that focuses on algorithms and statistical models. What makes this particularly interesting is how it enables computers to learn and improve from experience without being explicitly programmed.
+
+Moving on to neural networks, we see a powerful tool for pattern recognition. Your documents emphasize that neural networks are computing systems inspired by biological neural networks. This biomimetic approach has led to breakthrough applications in image recognition, natural language processing, and predictive analytics.
+
+Data preprocessing emerges as a crucial theme across your documents. The importance of clean, well-structured data cannot be overstated. As highlighted in your materials, data preprocessing involves collection, cleaning, analysis, and visualization to support decision-making processes.
+
+The connection between these concepts becomes clear when we consider real-world applications. In business contexts, artificial intelligence is transforming operations through automation, predictive analytics, and intelligent decision support systems.
+
+To wrap up, the key takeaway from your documents is that successful machine learning implementation requires a holistic approach: understanding the fundamentals, properly preprocessing your data, choosing appropriate algorithms, and considering the business context for your applications.
+
+Thank you for listening to your personalized AI Learning Podcast. Keep exploring and learning!
+      `,
+      chapters: [
+        { title: 'Introduction to Machine Learning', startTime: 0, endTime: 90 },
+        { title: 'Neural Networks Explained', startTime: 90, endTime: 180 },
+        { title: 'Data Preprocessing Importance', startTime: 180, endTime: 270 },
+        { title: 'Business Applications', startTime: 270, endTime: 360 },
+        { title: 'Key Takeaways', startTime: 360, endTime: 420 },
+      ],
+      generatedAt: new Date().toISOString(),
+      sources: documentIds || ['ML_Fundamentals.pdf', 'Data_Science_Handbook.pdf'],
+    }
+
+    return NextResponse.json({
+      success: true,
+      podcast: podcastData,
+      message: 'Podcast generated successfully',
     })
   } catch (error) {
-    console.error('Error generating podcast:', error)
+    console.error('Podcast generation error:', error)
     return NextResponse.json(
       { error: 'Failed to generate podcast' },
       { status: 500 }

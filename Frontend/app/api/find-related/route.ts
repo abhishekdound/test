@@ -20,53 +20,60 @@ interface SimilarityResult {
   explanation: string
 }
 
+import { NextRequest, NextResponse } from 'next/server'
+
 export async function POST(request: NextRequest) {
   try {
-    const { currentText, allDocuments, currentDocumentId } = await request.json()
+    const body = await request.json()
+    const { query, documentId } = body
 
-    if (!currentText || !allDocuments) {
-      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
+    if (!query) {
+      return NextResponse.json(
+        { error: 'Query is required' },
+        { status: 400 }
+      )
     }
 
-    // For demo purposes, provide mock related sections
-    // In production, this would analyze real document content
-    const mockRelatedSections = [
+    // Mock related content finding
+    const relatedSections = [
       {
-        id: "mock-1",
-        title: "Introduction to Machine Learning",
-        type: "document" as const,
-        relevance: 92,
-        preview: "Foundational concepts that directly relate to the current section's discussion on neural networks.",
+        id: 'related-1',
+        title: 'Introduction to Machine Learning',
+        content: 'Machine learning is a subset of artificial intelligence...',
+        relevanceScore: 0.95,
+        documentName: 'ML_Fundamentals.pdf',
         pageNumber: 1,
-        documentName: "ML_Basics.pdf",
-        explanation: "Related through shared concepts: machine learning, neural networks, algorithms"
       },
       {
-        id: "mock-2",
-        title: "Data Preprocessing Techniques",
-        type: "document" as const,
-        relevance: 87,
-        preview: "Essential preprocessing steps mentioned in the current context for model preparation.",
+        id: 'related-2',
+        title: 'Neural Network Basics',
+        content: 'Neural networks are computing systems inspired by biological neural networks...',
+        relevanceScore: 0.87,
+        documentName: 'Deep_Learning_Guide.pdf',
         pageNumber: 3,
-        documentName: "Data_Science_Guide.pdf",
-        explanation: "Related through shared concepts: data processing, preprocessing, model preparation"
       },
       {
-        id: "mock-3",
-        title: "Advanced AI Applications",
-        type: "research" as const,
-        relevance: 85,
-        preview: "Real-world applications and case studies that build upon the theoretical foundations discussed.",
-        pageNumber: 5,
-        documentName: "AI_Applications.pdf",
-        explanation: "Related through shared concepts: AI applications, case studies, real-world examples"
-      }
+        id: 'related-3',
+        title: 'Data Preprocessing Techniques',
+        content: 'Data preprocessing is a crucial step in machine learning workflows...',
+        relevanceScore: 0.82,
+        documentName: 'Data_Science_Handbook.pdf',
+        pageNumber: 15,
+      },
     ]
 
-    return NextResponse.json({ relatedSections: mockRelatedSections })
+    return NextResponse.json({
+      success: true,
+      query,
+      relatedSections,
+      totalFound: relatedSections.length,
+    })
   } catch (error) {
-    console.error("Related sections error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Find related content error:', error)
+    return NextResponse.json(
+      { error: 'Failed to find related content' },
+      { status: 500 }
+    )
   }
 }
 
@@ -195,44 +202,4 @@ function generateExplanation(currentText: string, relatedContent: string): strin
   const keyTerms = commonWords.slice(0, 3).join(", ")
 
   return `Related through shared concepts: ${keyTerms}`
-}
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function POST(request: NextRequest) {
-  try {
-    const { content, documents } = await request.json()
-    
-    // Mock related sections generation
-    const relatedSections = [
-      {
-        id: 'related-1',
-        title: 'Data Processing Techniques',
-        content: 'Advanced methods for processing and analyzing large datasets using machine learning algorithms.',
-        similarity: 0.85,
-        documentName: 'AI Applications Guide'
-      },
-      {
-        id: 'related-2', 
-        title: 'Natural Language Processing',
-        content: 'Techniques for understanding and processing human language using computational methods.',
-        similarity: 0.78,
-        documentName: 'NLP Fundamentals'
-      },
-      {
-        id: 'related-3',
-        title: 'Knowledge Extraction',
-        content: 'Methods for automatically extracting structured knowledge from unstructured text documents.',
-        similarity: 0.72,
-        documentName: 'Information Retrieval Systems'
-      }
-    ]
-
-    return NextResponse.json({ relatedSections })
-  } catch (error) {
-    console.error('Error finding related sections:', error)
-    return NextResponse.json(
-      { error: 'Failed to find related sections' },
-      { status: 500 }
-    )
-  }
 }
