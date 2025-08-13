@@ -27,149 +27,56 @@ interface GraphData {
 
 // Mock concept extraction function
 function extractConcepts(text: string): ConceptNode[] {
-  const concepts = [
-    'Machine Learning', 'Artificial Intelligence', 'Neural Networks', 'Deep Learning',
-    'Data Science', 'Algorithm', 'Training', 'Model', 'Feature', 'Dataset',
-    'Classification', 'Regression', 'Clustering', 'Supervised Learning',
-    'Unsupervised Learning', 'Reinforcement Learning', 'Computer Vision',
-    'Natural Language Processing', 'Big Data', 'Analytics'
+  const mockConcepts = [
+    { id: '1', label: 'Machine Learning', type: 'concept' as const, size: 20, color: '#3b82f6', frequency: 15 },
+    { id: '2', label: 'Neural Networks', type: 'concept' as const, size: 18, color: '#8b5cf6', frequency: 12 },
+    { id: '3', label: 'Data Science', type: 'concept' as const, size: 16, color: '#10b981', frequency: 10 },
+    { id: '4', label: 'Algorithm', type: 'concept' as const, size: 14, color: '#f59e0b', frequency: 8 },
+    { id: '5', label: 'Document A', type: 'document' as const, size: 12, color: '#ef4444', frequency: 5 },
+    { id: '6', label: 'Deep Learning', type: 'topic' as const, size: 15, color: '#06b6d4', frequency: 7 },
   ]
-
-  return concepts.map((concept, index) => ({
-    id: `concept-${index}`,
-    label: concept,
-    type: 'concept' as const,
-    size: Math.random() * 50 + 20,
-    color: '#10b981',
-    frequency: Math.floor(Math.random() * 100) + 1,
-  }))
+  
+  return mockConcepts
 }
 
-function generateMockGraphData(): GraphData {
-  // Generate mock nodes
-  const conceptNodes = extractConcepts('')
-  const documentNodes: ConceptNode[] = [
-    {
-      id: 'doc-1',
-      label: 'AI Fundamentals.pdf',
-      type: 'document',
-      size: 60,
-      color: '#3b82f6',
-      document: 'AI Fundamentals.pdf',
-      frequency: 1,
-    },
-    {
-      id: 'doc-2',
-      label: 'ML Algorithms.pdf',
-      type: 'document',
-      size: 60,
-      color: '#3b82f6',
-      document: 'ML Algorithms.pdf',
-      frequency: 1,
-    },
-    {
-      id: 'doc-3',
-      label: 'Deep Learning Guide.pdf',
-      type: 'document',
-      size: 60,
-      color: '#3b82f6',
-      document: 'Deep Learning Guide.pdf',
-      frequency: 1,
-    },
-  ]
-
-  const topicNodes: ConceptNode[] = [
-    {
-      id: 'topic-1',
-      label: 'Mathematics',
-      type: 'topic',
-      size: 40,
-      color: '#8b5cf6',
-      frequency: 15,
-    },
-    {
-      id: 'topic-2',
-      label: 'Programming',
-      type: 'topic',
-      size: 40,
-      color: '#8b5cf6',
-      frequency: 12,
-    },
-    {
-      id: 'topic-3',
-      label: 'Statistics',
-      type: 'topic',
-      size: 40,
-      color: '#8b5cf6',
-      frequency: 18,
-    },
-  ]
-
-  const allNodes = [...conceptNodes.slice(0, 10), ...documentNodes, ...topicNodes]
-
-  // Generate mock edges
+// Mock edge generation
+function generateEdges(nodes: ConceptNode[]): ConceptEdge[] {
   const edges: ConceptEdge[] = []
   
-  // Connect documents to concepts
-  documentNodes.forEach((doc, docIndex) => {
-    const conceptsToConnect = conceptNodes.slice(docIndex * 3, (docIndex + 1) * 3 + 2)
-    conceptsToConnect.forEach((concept, conceptIndex) => {
-      edges.push({
-        id: `edge-doc-${docIndex}-concept-${conceptIndex}`,
-        source: doc.id,
-        target: concept.id,
-        weight: Math.random() * 0.8 + 0.2,
-        label: 'contains',
-        type: 'co-occurrence',
-      })
-    })
-  })
-
-  // Connect topics to concepts
-  topicNodes.forEach((topic, topicIndex) => {
-    const conceptsToConnect = conceptNodes.slice(topicIndex * 2, (topicIndex + 1) * 2 + 3)
-    conceptsToConnect.forEach((concept, conceptIndex) => {
-      edges.push({
-        id: `edge-topic-${topicIndex}-concept-${conceptIndex}`,
-        source: topic.id,
-        target: concept.id,
-        weight: Math.random() * 0.9 + 0.1,
-        label: 'relates to',
-        type: 'semantic',
-      })
-    })
-  })
-
-  // Connect some concepts to each other
-  for (let i = 0; i < conceptNodes.length - 1; i++) {
-    if (Math.random() > 0.7) {
-      edges.push({
-        id: `edge-concept-${i}-${i + 1}`,
-        source: conceptNodes[i].id,
-        target: conceptNodes[i + 1].id,
-        weight: Math.random() * 0.6 + 0.1,
-        label: 'similar to',
-        type: 'semantic',
-      })
-    }
-  }
-
-  return {
-    nodes: allNodes,
-    edges: edges,
-  }
+  // Create some meaningful connections
+  edges.push(
+    { id: 'e1-2', source: '1', target: '2', weight: 0.8, label: 'related', type: 'semantic' },
+    { id: 'e1-3', source: '1', target: '3', weight: 0.6, label: 'part of', type: 'semantic' },
+    { id: 'e2-6', source: '2', target: '6', weight: 0.9, label: 'subset', type: 'semantic' },
+    { id: 'e3-4', source: '3', target: '4', weight: 0.5, label: 'uses', type: 'co-occurrence' },
+    { id: 'e5-1', source: '5', target: '1', weight: 0.7, label: 'contains', type: 'co-occurrence' },
+    { id: 'e5-2', source: '5', target: '2', weight: 0.4, label: 'mentions', type: 'co-occurrence' },
+  )
+  
+  return edges
 }
 
 export async function GET() {
   try {
-    // Simulate some processing time
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    const graphData = generateMockGraphData()
-
+    // In a real implementation, this would:
+    // 1. Fetch processed documents from the backend
+    // 2. Extract concepts using NLP
+    // 3. Generate relationships between concepts
+    // 4. Create graph structure
+    
+    // For now, return mock data
+    const mockText = "This is mock document text for concept extraction"
+    const nodes = extractConcepts(mockText)
+    const edges = generateEdges(nodes)
+    
+    const graphData: GraphData = {
+      nodes,
+      edges
+    }
+    
     return NextResponse.json(graphData)
   } catch (error) {
-    console.error('Graph data generation error:', error)
+    console.error('Error generating graph data:', error)
     return NextResponse.json(
       { error: 'Failed to generate graph data' },
       { status: 500 }
