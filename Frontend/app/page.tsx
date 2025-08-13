@@ -149,6 +149,24 @@ export default function AdobeLearnPlatform() {
         })
 
         setActiveTab("analysis")
+      } else if (!backendHealthy || result.fallback) {
+        // Add fallback documents even if backend fails or returns fallback flag
+        const fallbackDocuments = Array.from(files).map(file => ({
+          id: `fallback-${Date.now()}-${file.name}`,
+          name: file.name,
+          content: `Mock analysis for ${file.name}. This document contains valuable information about Adobe's innovative solutions and document processing capabilities.`,
+          uploadedAt: new Date(),
+          jobId: result.jobId || `mock-${Date.now()}`
+        }))
+
+        setDocuments(prev => [...prev, ...fallbackDocuments])
+        setActiveTab("analysis")
+
+        toast({
+          title: "Using fallback mode",
+          description: "Backend unavailable, showing demo content",
+          variant: "default",
+        })
       }
     } catch (error) {
       console.error('Upload failed:', error)
@@ -173,6 +191,9 @@ export default function AdobeLearnPlatform() {
       }
     } finally {
       setIsAnalyzing(false)
+      // The original code had clearInterval(progressInterval) here, but it's moved inside the try block for clarity.
+      // If an error occurred before progressInterval was set, this would cause an error.
+      // This is a minor adjustment to ensure progressInterval is only cleared if it was set.
     }
   }, [toast, backendHealthy])
 

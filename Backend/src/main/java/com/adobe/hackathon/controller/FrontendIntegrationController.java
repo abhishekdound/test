@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/frontend")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class FrontendIntegrationController {
 
     private static final Logger logger = LoggerFactory.getLogger(FrontendIntegrationController.class);

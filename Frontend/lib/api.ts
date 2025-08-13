@@ -9,7 +9,15 @@ class ApiService {
 
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/frontend/health`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
+      const response = await fetch(`${this.baseUrl}/api/frontend/health`, {
+        signal: controller.signal,
+        cache: 'no-cache'
+      })
+      
+      clearTimeout(timeoutId)
       return response.ok
     } catch (error) {
       console.error('Health check failed:', error)
@@ -22,10 +30,16 @@ class ApiService {
       formData.append('persona', persona)
       formData.append('jobToBeDone', jobToBeDone)
 
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
       const response = await fetch(`${this.baseUrl}/api/frontend/analyze`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -38,7 +52,9 @@ class ApiService {
       return {
         jobId: `mock-job-${Date.now()}`,
         status: 'processing',
-        message: 'Analysis started (mock data)'
+        message: 'Analysis started (mock data)',
+        success: false,
+        fallback: true
       }
     }
   }
