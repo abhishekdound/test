@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
@@ -66,7 +65,7 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 }
 
-export default function KnowledgeGraph() {
+function KnowledgeGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -83,7 +82,7 @@ export default function KnowledgeGraph() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await fetch('/api/graph-data', {
         method: 'GET',
         headers: {
@@ -96,7 +95,7 @@ export default function KnowledgeGraph() {
       }
 
       const data: GraphData = await response.json()
-      
+
       // Transform nodes for React Flow
       const flowNodes: Node[] = data.nodes.map((node, index) => ({
         id: node.id,
@@ -300,3 +299,5 @@ export default function KnowledgeGraph() {
     </div>
   )
 }
+
+export default KnowledgeGraph
