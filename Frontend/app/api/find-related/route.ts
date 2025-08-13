@@ -196,3 +196,43 @@ function generateExplanation(currentText: string, relatedContent: string): strin
 
   return `Related through shared concepts: ${keyTerms}`
 }
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { content, documents } = await request.json()
+    
+    // Mock related sections generation
+    const relatedSections = [
+      {
+        id: 'related-1',
+        title: 'Data Processing Techniques',
+        content: 'Advanced methods for processing and analyzing large datasets using machine learning algorithms.',
+        similarity: 0.85,
+        documentName: 'AI Applications Guide'
+      },
+      {
+        id: 'related-2', 
+        title: 'Natural Language Processing',
+        content: 'Techniques for understanding and processing human language using computational methods.',
+        similarity: 0.78,
+        documentName: 'NLP Fundamentals'
+      },
+      {
+        id: 'related-3',
+        title: 'Knowledge Extraction',
+        content: 'Methods for automatically extracting structured knowledge from unstructured text documents.',
+        similarity: 0.72,
+        documentName: 'Information Retrieval Systems'
+      }
+    ]
+
+    return NextResponse.json({ relatedSections })
+  } catch (error) {
+    console.error('Error finding related sections:', error)
+    return NextResponse.json(
+      { error: 'Failed to find related sections' },
+      { status: 500 }
+    )
+  }
+}

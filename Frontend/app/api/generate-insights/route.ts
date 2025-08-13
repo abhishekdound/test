@@ -144,3 +144,54 @@ function createFallbackInsights(response: string): Insight[] {
     sources: ["AI Analysis"],
   }))
 }
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { content, relatedSections } = await request.json()
+    
+    // Mock insights generation
+    const insights = [
+      {
+        id: 'insight-1',
+        type: 'key_point',
+        title: 'Core Concept: Machine Learning Applications',
+        content: 'The document emphasizes the importance of machine learning in modern data processing workflows.',
+        confidence: 92,
+        sources: ['Document Analysis', 'Content Processing']
+      },
+      {
+        id: 'insight-2',
+        type: 'summary',
+        title: 'Document Summary',
+        content: 'This document covers advanced techniques in AI-powered document analysis and knowledge extraction.',
+        confidence: 88,
+        sources: ['Full Document']
+      },
+      {
+        id: 'insight-3',
+        type: 'connection',
+        title: 'Related Concepts',
+        content: 'Strong connections found between natural language processing and information retrieval systems.',
+        confidence: 85,
+        sources: ['Cross-reference Analysis']
+      },
+      {
+        id: 'insight-4',
+        type: 'question',
+        title: 'Further Investigation',
+        content: 'How can these techniques be applied to improve document search and retrieval systems?',
+        confidence: 80,
+        sources: ['Analytical Framework']
+      }
+    ]
+
+    return NextResponse.json({ insights })
+  } catch (error) {
+    console.error('Error generating insights:', error)
+    return NextResponse.json(
+      { error: 'Failed to generate insights' },
+      { status: 500 }
+    )
+  }
+}

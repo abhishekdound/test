@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from 'next/server'
 
 interface ConceptNode {
   id: string
@@ -24,42 +24,49 @@ interface GraphData {
   edges: ConceptEdge[]
 }
 
-// Mock concept extraction function - in production, this would use NLP libraries
+// Mock concept extraction function
 function extractConcepts(text: string): string[] {
   const words = text.toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
     .filter(word => word.length > 3)
     .filter(word => !['this', 'that', 'with', 'from', 'they', 'have', 'been', 'will', 'would', 'could', 'should'].includes(word))
-  
-  // Simple frequency-based concept extraction
+
   const wordFreq: { [key: string]: number } = {}
   words.forEach(word => {
     wordFreq[word] = (wordFreq[word] || 0) + 1
   })
-  
-  // Return top concepts by frequency
+
   return Object.entries(wordFreq)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 20)
     .map(([word]) => word)
 }
 
-// Mock function to build knowledge graph from documents
 function buildKnowledgeGraph(documents: any[]): GraphData {
   const nodes: ConceptNode[] = []
   const edges: ConceptEdge[] = []
   const conceptMap = new Map<string, ConceptNode>()
   const edgeMap = new Map<string, ConceptEdge>()
-  
-  // Extract concepts from each document
+
+  // Add document nodes
   documents.forEach((doc, docIndex) => {
+    const docId = `doc-${docIndex}`
+    nodes.push({
+      id: docId,
+      label: doc.name,
+      type: "document",
+      size: 60,
+      color: "#ef4444",
+      document: doc.name,
+      frequency: 1
+    })
+
     const concepts = extractConcepts(doc.content || doc.text || '')
-    
-    concepts.forEach((concept, conceptIndex) => {
+
+    concepts.forEach((concept) => {
       const conceptId = `concept-${concept}`
-      
-      // Create or update concept node
+
       if (!conceptMap.has(conceptId)) {
         conceptMap.set(conceptId, {
           id: conceptId,
@@ -74,91 +81,63 @@ function buildKnowledgeGraph(documents: any[]): GraphData {
         existing.frequency += 1
         existing.size = Math.min(80, 20 + existing.frequency * 8)
       }
-      
-      // Create edges between concepts in the same document
-      concepts.forEach((otherConcept, otherIndex) => {
-        if (conceptIndex !== otherIndex && concept !== otherConcept) {
-          const edgeId = `${conceptId}-${otherConcept}`
-          const reverseEdgeId = `${otherConcept}-${conceptId}`
-          
-          if (!edgeMap.has(edgeId) && !edgeMap.has(reverseEdgeId)) {
-            const weight = 1 + Math.random() * 2
-            edgeMap.set(edgeId, {
-              id: edgeId,
-              source: conceptId,
-              target: `concept-${otherConcept}`,
-              weight,
-              label: `${Math.round(weight * 10) / 10}`,
-              type: "co-occurrence"
-            })
-          } else {
-            // Increase weight for existing edge
-            const existingEdge = edgeMap.get(edgeId) || edgeMap.get(reverseEdgeId)!
-            existingEdge.weight += 0.5
-            existingEdge.label = `${Math.round(existingEdge.weight * 10) / 10}`
-          }
+
+      // Create edge from document to concept
+      const docConceptEdgeId = `${docId}-${conceptId}`
+      if (!edgeMap.has(docConceptEdgeId)) {
+        edgeMap.set(docConceptEdgeId, {
+          id: docConceptEdgeId,
+          source: docId,
+          target: conceptId,
+          weight: 2,
+          label: "contains",
+          type: "semantic"
+        })
+      }
+    })
+
+    // Create edges between concepts in the same document
+    for (let i = 0; i < concepts.length; i++) {
+      for (let j = i + 1; j < concepts.length; j++) {
+        const concept1 = `concept-${concepts[i]}`
+        const concept2 = `concept-${concepts[j]}`
+        const edgeId = `${concept1}-${concept2}`
+        const reverseEdgeId = `${concept2}-${concept1}`
+
+        if (!edgeMap.has(edgeId) && !edgeMap.has(reverseEdgeId)) {
+          edgeMap.set(edgeId, {
+            id: edgeId,
+            source: concept1,
+            target: concept2,
+            weight: 1 + Math.random() * 2,
+            label: "co-occurs",
+            type: "co-occurrence"
+          })
         }
-      })
-    })
-    
-    // Add document node
-    const docNode: ConceptNode = {
-      id: `doc-${docIndex}`,
-      label: doc.name || `Document ${docIndex + 1}`,
-      type: "document",
-      size: 40,
-      color: "#ef4444",
-      document: doc.name,
-      frequency: 1
+      }
     }
-    nodes.push(docNode)
-    
-    // Connect document to its main concepts
-    const mainConcepts = concepts.slice(0, 3)
-    mainConcepts.forEach(concept => {
-      const conceptId = `concept-${concept}`
-      const edgeId = `doc-${docIndex}-${concept}`
-      
-      edgeMap.set(edgeId, {
-        id: edgeId,
-        source: `doc-${docIndex}`,
-        target: conceptId,
-        weight: 2,
-        label: "contains",
-        type: "semantic"
-      })
-    })
   })
-  
+
   // Add concept nodes
-  conceptMap.forEach(node => {
-    nodes.push(node)
-  })
-  
+  conceptMap.forEach(node => nodes.push(node))
+
   // Add edges
-  edgeMap.forEach(edge => {
-    edges.push(edge)
-  })
-  
+  edgeMap.forEach(edge => edges.push(edge))
+
   return { nodes, edges }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // In a real implementation, you would:
-    // 1. Load actual PDF metadata from your storage
-    // 2. Extract concepts using NLP libraries
-    // 3. Build relationships based on semantic similarity
-    
-    // For now, using mock data to demonstrate the concept
+    // Mock documents for demonstration
     const mockDocuments = [
       {
-        name: "Machine Learning Basics",
-        content: "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions based on those patterns.",
-        text: "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions based on those patterns."
+        name: "Machine Learning Fundamentals",
+        content: "Machine learning is a subset of artificial intelligence that focuses on algorithms and statistical models. It enables computers to learn and improve from experience without being explicitly programmed. Key concepts include supervised learning, unsupervised learning, neural networks, and deep learning.",
+        text: "Machine learning is a subset of artificial intelligence that focuses on algorithms and statistical models. It enables computers to learn and improve from experience without being explicitly programmed. Key concepts include supervised learning, unsupervised learning, neural networks, and deep learning."
       },
       {
-        name: "Data Science Fundamentals",
+        name: "Data Science Applications", 
         content: "Data science combines statistics, mathematics, programming, and domain expertise to extract meaningful insights from large datasets. It involves data collection, cleaning, analysis, and visualization to support decision-making processes.",
         text: "Data science combines statistics, mathematics, programming, and domain expertise to extract meaningful insights from large datasets. It involves data collection, cleaning, analysis, and visualization to support decision-making processes."
       },
@@ -168,9 +147,9 @@ export async function GET(request: NextRequest) {
         text: "Artificial intelligence is transforming business operations through automation, predictive analytics, and intelligent decision support systems. Companies are using AI to optimize processes, enhance customer experiences, and gain competitive advantages."
       }
     ]
-    
+
     const graphData = buildKnowledgeGraph(mockDocuments)
-    
+
     return NextResponse.json(graphData)
   } catch (error) {
     console.error("Error generating knowledge graph:", error)
@@ -179,4 +158,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@reactflow/core": "^11.11.4",
+    "@reactflow/node-resizer": "^2.2.14",
+    "reactflow": "^11.11.4"
+  }
+}

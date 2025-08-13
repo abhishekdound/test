@@ -111,3 +111,26 @@ function estimateDuration(script: string): number {
   const wordCount = script.split(/\s+/).length
   return Math.ceil((wordCount / 150) * 60) // Return duration in seconds
 }
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { document, insights } = await request.json()
+    
+    // Mock podcast generation - in production, you'd use TTS services
+    const mockAudioUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA'
+    
+    return NextResponse.json({ 
+      audioUrl: mockAudioUrl,
+      duration: 180, // 3 minutes
+      title: `${document.name} - Audio Overview`,
+      description: 'AI-generated podcast from your document analysis'
+    })
+  } catch (error) {
+    console.error('Error generating podcast:', error)
+    return NextResponse.json(
+      { error: 'Failed to generate podcast' },
+      { status: 500 }
+    )
+  }
+}

@@ -59,3 +59,46 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    // Mock text extraction - in production, you'd use a PDF parsing library
+    const mockText = `
+    This is extracted text from the PDF file: ${file.name}
+    
+    Key concepts covered:
+    - Document processing
+    - AI-powered analysis
+    - Knowledge extraction
+    - Content summarization
+    
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    
+    Important insights:
+    - Machine learning applications in document processing
+    - Natural language processing techniques
+    - Data extraction methodologies
+    - Information retrieval systems
+    `
+
+    return NextResponse.json({ 
+      text: mockText,
+      filename: file.name,
+      size: file.size
+    })
+  } catch (error) {
+    console.error('Error extracting text:', error)
+    return NextResponse.json(
+      { error: 'Failed to extract text from file' },
+      { status: 500 }
+    )
+  }
+}

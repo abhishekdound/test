@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { KnowledgeGraph } from "@/components/KnowledgeGraph"
+import KnowledgeGraph from "@/components/KnowledgeGraph"
 import { 
   Upload, 
   FileText, 

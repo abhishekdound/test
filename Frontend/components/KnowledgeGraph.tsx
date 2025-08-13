@@ -118,14 +118,14 @@ export default function KnowledgeGraph() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await fetch("/api/graph-data")
       if (!response.ok) {
         throw new Error("Failed to fetch graph data")
       }
-      
+
       const data: GraphData = await response.json()
-      
+
       // Convert to ReactFlow format
       const flowNodes: Node[] = data.nodes.map((node) => ({
         id: node.id,
@@ -140,7 +140,7 @@ export default function KnowledgeGraph() {
           height: node.type === "concept" ? node.size : "auto",
         },
       }))
-      
+
       const flowEdges: Edge[] = data.edges.map((edge) => ({
         id: edge.id,
         source: edge.source,
@@ -157,10 +157,10 @@ export default function KnowledgeGraph() {
           fontWeight: "500",
         },
       }))
-      
+
       setNodes(flowNodes)
       setEdges(flowEdges)
-      
+
       // Calculate stats
       setGraphStats({
         totalNodes: data.nodes.length,
@@ -168,7 +168,7 @@ export default function KnowledgeGraph() {
         concepts: data.nodes.filter(n => n.type === "concept").length,
         documents: data.nodes.filter(n => n.type === "document").length,
       })
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -227,7 +227,7 @@ export default function KnowledgeGraph() {
               AI Generated
             </Badge>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
@@ -245,7 +245,7 @@ export default function KnowledgeGraph() {
             </Button>
           </div>
         </div>
-        
+
         {/* Graph Statistics */}
         <div className="flex items-center space-x-4 mt-4">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -266,7 +266,7 @@ export default function KnowledgeGraph() {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="relative">
           {isLoading && (
@@ -277,7 +277,7 @@ export default function KnowledgeGraph() {
               </div>
             </div>
           )}
-          
+
           <div className="h-96 w-full border border-gray-600 rounded-lg overflow-hidden">
             <ReactFlow
               nodes={nodes}
@@ -296,7 +296,7 @@ export default function KnowledgeGraph() {
               <Controls className="bg-gray-800 border-gray-600" />
             </ReactFlow>
           </div>
-          
+
           {/* Node Information Panel */}
           {selectedNode && (
             <div className="mt-4 p-4 bg-gray-700 rounded-lg border border-gray-600">
@@ -327,7 +327,7 @@ export default function KnowledgeGraph() {
               </div>
             </div>
           )}
-          
+
           {/* Legend */}
           <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
             <h5 className="font-medium text-white text-sm mb-2">Legend</h5>
@@ -354,4 +354,7 @@ export default function KnowledgeGraph() {
       </CardContent>
     </Card>
   )
-} 
+}
+
+export default KnowledgeGraph
+export { KnowledgeGraph }
