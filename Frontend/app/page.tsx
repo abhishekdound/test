@@ -34,6 +34,7 @@ interface Document {
   name: string
   content: string
   uploadedAt: Date
+  jobId?: string // Added jobId to Document interface
 }
 
 interface Insight {
@@ -119,6 +120,7 @@ export default function AdobeLearnPlatform() {
           name: file.name,
           content: data.text || 'No text extracted',
           uploadedAt: new Date(),
+          jobId: data.jobId // Assuming API returns a jobId
         }
 
         setDocuments(prev => [...prev, newDocument])
@@ -175,11 +177,10 @@ export default function AdobeLearnPlatform() {
     setIsGeneratingInsights(true)
 
     try {
-      const response = await apiService.generateInsights({
-        content: selectedDocument.content,
-        relatedSections: relatedSections,
-      });
-      
+      // Use the first document's job ID for insights generation
+      const jobId = selectedDocument.jobId || 'mock-job-id';
+      const response = await apiService.generateInsights(jobId);
+
       setInsights(response.insights || [])
 
       toast({
@@ -195,7 +196,7 @@ export default function AdobeLearnPlatform() {
     } finally {
       setIsGeneratingInsights(false)
     }
-  }, [selectedDocument, relatedSections, toast])
+  }, [selectedDocument, toast])
 
   const generatePodcast = useCallback(async () => {
     if (!selectedDocument || insights.length === 0) return
@@ -203,11 +204,10 @@ export default function AdobeLearnPlatform() {
     setIsGeneratingPodcast(true)
 
     try {
-      const response = await apiService.generatePodcast({
-        document: selectedDocument,
-        insights: insights,
-      });
-      
+      // Use the first document's job ID for podcast generation
+      const jobId = selectedDocument.jobId || 'mock-job-id';
+      const response = await apiService.generatePodcast(jobId);
+
       setPodcastUrl(response.audioUrl)
 
       toast({

@@ -25,4 +25,10 @@ declare global {
   }
 }
 
-export {}
+export interface Document {
+  id: string
+  name: string
+  content: string
+  uploadedAt: Date
+  jobId?: string
+}
