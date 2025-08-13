@@ -2,13 +2,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8080',
   },
   async rewrites() {
     return [
       {
         source: '/api/backend/:path*',
-        destination: 'http://localhost:8080/api/:path*',
+        destination: 'http://0.0.0.0:8080/api/:path*',
       },
     ]
   },
@@ -23,6 +23,19 @@ const nextConfig = {
         ],
       },
     ]
+  },
+  // Ensure static files are served properly
+  trailingSlash: false,
+  // Optimize for development
+  experimental: {
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
 }
 
