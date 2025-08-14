@@ -2,26 +2,25 @@
 package com.adobe.hackathon.controller;
 
 import org.springframework.boot.web.servlet.error.ErrorController;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.WebRequest;
 import java.util.Map;
+import java.util.HashMap;
 
 @Controller
 public class CustomErrorController implements ErrorController {
 
     @RequestMapping("/error")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> handleError(WebRequest request) {
         Map<String, Object> errorResponse = new HashMap<>();
         
-        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
-        String errorMessage = (String) request.getAttribute("javax.servlet.error.message");
-        String requestURI = (String) request.getAttribute("javax.servlet.error.request_uri");
+        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code", 0);
+        String errorMessage = (String) request.getAttribute("javax.servlet.error.message", 0);
+        String requestURI = (String) request.getAttribute("javax.servlet.error.request_uri", 0);
 
         errorResponse.put("status", statusCode != null ? statusCode : 500);
         errorResponse.put("error", errorMessage != null ? errorMessage : "An unexpected error occurred");

@@ -488,11 +488,11 @@ export default function AdobeLearnPlatform() {
                     <div className="mt-4 space-y-2">
                       <Button 
                         onClick={generateInsights}
-                        disabled={isGeneratingInsights || !backendHealthy || insights.length > 0} // Disable if insights already generated for this doc
+                        disabled={isGeneratingInsights}
                         className="w-full"
                       >
                         <Lightbulb className="w-4 h-4 mr-2" />
-                        {isGeneratingInsights ? 'Generating...' : 'Generate Insights'}
+                        {isGeneratingInsights ? 'Generating Insights...' : insights.length > 0 ? 'Regenerate Insights' : 'Generate Insights'}
                       </Button>
                       <Button 
                         onClick={generatePodcast}

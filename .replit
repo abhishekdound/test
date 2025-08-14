@@ -5,7 +5,7 @@ run = "node index.js"
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Start App Working"
+runButton = "Start App Working Fixed"
 
 [[workflows.workflow]]
 name = "Start Full Stack"
@@ -137,6 +137,19 @@ mode = "parallel"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd Backend && chmod +x ./mvnw && ./mvnw clean compile spring-boot:run -Dspring-boot.run.arguments=\"--server.address=0.0.0.0 --server.port=8080\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd Frontend && npm run dev -- --hostname 0.0.0.0 --port 3000"
+
+[[workflows.workflow]]
+name = "Start App Working Fixed"
+author = 46395971
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd Backend && chmod +x ./mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=\"--server.address=0.0.0.0 --server.port=8080\""
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
