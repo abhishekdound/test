@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8080'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('replit') 
+  ? `https://${window.location.hostname.replace(/.*?-/, '').replace(/-.*/, '')}-8080.replit.dev`
+  : 'http://0.0.0.0:8080');
 
 class ApiService {
   private baseUrl: string
@@ -23,7 +25,7 @@ class ApiService {
       })
 
       clearTimeout(timeoutId)
-      
+
       if (response.ok) {
         console.log('Backend health check: OK')
         return true
