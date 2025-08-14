@@ -577,29 +577,32 @@ public class FrontendIntegrationController {
             Map<String, Object> response = new HashMap<>();
             List<Map<String, Object>> insights = new ArrayList<>();
 
-            // Create mock insights
+            // Create mock insights with proper structure
             Map<String, Object> insight1 = new HashMap<>();
             insight1.put("id", "insight-1");
+            insight1.put("type", "key_point");
             insight1.put("title", "Document Structure Analysis");
-            insight1.put("description", "The document shows well-organized content with clear sections and subsections.");
-            insight1.put("type", "analysis");
-            insight1.put("confidence", 0.9);
+            insight1.put("content", "The document shows well-organized content with clear sections and subsections, making it suitable for comprehensive analysis.");
+            insight1.put("confidence", 90);
+            insight1.put("sources", new String[]{jobId + "_document"});
             insights.add(insight1);
 
             Map<String, Object> insight2 = new HashMap<>();
             insight2.put("id", "insight-2");
-            insight2.put("title", "Content Recommendation");
-            insight2.put("description", "Consider adding more visual elements to enhance document readability.");
-            insight2.put("type", "recommendation");
-            insight2.put("confidence", 0.75);
+            insight2.put("type", "summary");
+            insight2.put("title", "Content Overview");
+            insight2.put("content", "The uploaded document contains valuable information with clear organizational structure and actionable content.");
+            insight2.put("confidence", 85);
+            insight2.put("sources", new String[]{jobId + "_document"});
             insights.add(insight2);
 
             Map<String, Object> insight3 = new HashMap<>();
             insight3.put("id", "insight-3");
-            insight3.put("title", "Structural Analysis");
-            insight3.put("description", "Document demonstrates clear hierarchical organization with logical flow.");
-            insight3.put("type", "analysis");
-            insight3.put("confidence", 0.88);
+            insight3.put("type", "connection");
+            insight3.put("title", "Content Connections");
+            insight3.put("content", "Document demonstrates clear hierarchical organization with logical flow between sections and concepts.");
+            insight3.put("confidence", 88);
+            insight3.put("sources", new String[]{jobId + "_document"});
             insights.add(insight3);
 
             response.put("success", true);
