@@ -18,7 +18,7 @@ public class ApplicationErrorController implements ErrorController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Map<String, Object> errorResponse = new HashMap<>();
-
+        
         Integer statusCode = (Integer) request.getAttribute("jakarta.servlet.error.status_code");
         String errorMessage = (String) request.getAttribute("jakarta.servlet.error.message");
         String requestURI = (String) request.getAttribute("jakarta.servlet.error.request_uri");

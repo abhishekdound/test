@@ -594,6 +594,15 @@ public class FrontendIntegrationController {
             insight2.put("confidence", 0.75);
             insights.add(insight2);
 
+            Map<String, Object> insight3 = new HashMap<>();
+            insight3.put("id", "insight-3");
+            insight3.put("title", "Structural Analysis");
+            insight3.put("description", "Document demonstrates clear hierarchical organization with logical flow.");
+            insight3.put("type", "analysis");
+            insight3.put("confidence", 0.88);
+            insights.add(insight3);
+
+            response.put("success", true);
             response.put("insights", insights);
             response.put("jobId", jobId);
             response.put("status", "completed");

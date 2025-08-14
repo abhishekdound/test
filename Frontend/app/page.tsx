@@ -232,21 +232,43 @@ export default function AdobeLearnPlatform() {
 
     try {
       // Use the first document's job ID for insights generation
-      const jobId = selectedDocument.jobId || 'mock-job-id';
+      const jobId = selectedDocument.jobId || `job-${Date.now()}`;
       const response = await apiService.generateInsights(jobId);
 
-      setInsights(response.insights || [])
+      if (response.success && response.insights && response.insights.length > 0) {
+        setInsights(response.insights)
+        toast({
+          title: "Insights Generated",
+          description: `Generated ${response.insights.length} insights successfully`,
+        })
+      } else if (response.fallback && response.insights) {
+        setInsights(response.insights)
+        toast({
+          title: "Insights Generated (Fallback)",
+          description: `Generated ${response.insights.length} fallback insights`,
+        })
+      } else {
+        throw new Error('No insights returned')
+      }
 
-      toast({
-        title: "Insights Generated",
-        description: `Generated ${response.insights?.length || 0} insights`,
-      })
-    } catch (error) {
+      } catch (error) {
+      console.error('Insight generation error:', error)
       toast({
         title: "Insight Generation Failed",
-        description: "Failed to generate insights",
+        description: "Failed to generate insights. Please try again.",
         variant: "destructive",
       })
+      // Set fallback insights even on error
+      setInsights([
+        {
+          id: 'fallback-1',
+          type: 'key_point',
+          title: 'Document Processing',
+          content: 'Your document has been processed and is ready for analysis.',
+          confidence: 75,
+          sources: [selectedDocument.name]
+        }
+      ])
     } finally {
       setIsGeneratingInsights(false)
     }

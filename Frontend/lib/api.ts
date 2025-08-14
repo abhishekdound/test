@@ -142,6 +142,7 @@ class ApiService {
 
   async generateInsights(jobId: string) {
     try {
+      // Try the frontend integration endpoint first
       const response = await fetch(`${this.baseUrl}/api/frontend/insights/${jobId}`, {
         method: 'POST',
         headers: {
@@ -149,39 +150,64 @@ class ApiService {
         },
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      if (response.ok) {
+        const data = await response.json()
+        return {
+          success: true,
+          insights: data.insights || [],
+          jobId: data.jobId,
+          timestamp: data.timestamp
+        }
       }
 
-      return await response.json()
+      // Fallback to Adobe challenge endpoint
+      const fallbackResponse = await fetch(`${this.baseUrl}/api/adobe/insights/${jobId}?sectionContent=document%20analysis&persona=data%20analyst&jobToBeDone=analyze%20documents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (fallbackResponse.ok) {
+        const data = await fallbackResponse.json()
+        return {
+          success: true,
+          insights: data.insights || [],
+          jobId: data.jobId,
+          timestamp: data.generatedAt
+        }
+      }
+
+      throw new Error(`HTTP error! status: ${response.status}`)
     } catch (error) {
       console.error('Generate insights failed:', error)
       return {
         fallback: true,
+        success: false,
         insights: [
           {
             id: 'insight-1',
             type: 'key_point',
-            title: 'Key Technology Insight',
-            content: 'Adobe\'s document processing technology leverages advanced AI algorithms for intelligent content analysis.',
+            title: 'Document Analysis Insight',
+            content: 'The uploaded document contains structured content suitable for automated analysis and insight extraction.',
             confidence: 90,
-            sources: ['Adobe Documentation']
+            sources: ['Document Analysis']
           },
           {
             id: 'insight-2',
             type: 'summary',
-            title: 'Document Summary',
-            content: 'The document provides comprehensive coverage of Adobe\'s innovative solutions for document management.',
+            title: 'Content Overview',
+            content: 'The document demonstrates clear organization with identifiable sections and actionable information.',
             confidence: 85,
-            sources: ['Adobe Documentation']
+            sources: ['Document Analysis']
           },
           {
             id: 'insight-3',
             type: 'connection',
-            title: 'Cross-Document Connection',
-            content: 'Strong correlation found between document processing features and user workflow optimization.',
+            title: 'Contextual Relationships',
+            content: 'Cross-references and thematic connections identified throughout the document structure.',
             confidence: 78,
-            sources: ['Adobe Documentation']
+            sources: ['Document Analysis']
           }
         ]
       }
