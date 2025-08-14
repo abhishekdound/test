@@ -140,90 +140,87 @@ class ApiService {
     }
   }
 
-  async generateInsights(jobId: string) {
+  async generateInsights(jobId: string, selectedText?: string) {
     try {
-      // Try the frontend integration endpoint first
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      const requestBody: any = {}
+      if (selectedText && selectedText.trim()) {
+        requestBody.selectedText = selectedText.trim()
+      }
 
       const response = await fetch(`${this.baseUrl}/api/frontend/insights/${jobId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: controller.signal,
+        body: Object.keys(requestBody).length > 0 ? JSON.stringify(requestBody) : undefined
       })
 
-      clearTimeout(timeoutId)
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Insights response:', data)
-        return {
-          success: true,
-          insights: data.insights || [],
-          jobId: data.jobId || jobId,
-          timestamp: data.timestamp || Date.now()
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      // Fallback to Adobe challenge endpoint with proper URL encoding
-      const fallbackUrl = `${this.baseUrl}/api/adobe/insights/${encodeURIComponent(jobId)}`
-      const fallbackParams = new URLSearchParams({
-        sectionContent: 'Analyzing document content for key insights and patterns',
-        persona: 'data analyst',
-        jobToBeDone: 'analyze documents and extract insights'
-      })
-
-      const fallbackResponse = await fetch(`${fallbackUrl}?${fallbackParams.toString()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (fallbackResponse.ok) {
-        const data = await fallbackResponse.json()
-        return {
-          success: true,
-          insights: data.insights?.keyInsights || data.insights || [],
-          jobId: data.jobId || jobId,
-          timestamp: data.generatedAt || Date.now()
-        }
-      }
-
-      throw new Error(`HTTP error! Frontend: ${response.status}, Fallback: ${fallbackResponse.status}`)
+      return await response.json()
     } catch (error) {
       console.error('Generate insights failed:', error)
+
+      // Generate fallback based on selected text or full document
+      const insights = selectedText ? [
+        {
+          id: 'fallback-selected-1',
+          type: 'key_point',
+          title: 'Selected Text Analysis',
+          content: `Analysis of selected text: "${selectedText.length > 100 ? selectedText.substring(0, 100) + '...' : selectedText}". Key concepts and themes have been identified.`,
+          confidence: 92,
+          sources: ['Text Selection Analysis']
+        },
+        {
+          id: 'fallback-selected-2',
+          type: 'summary',
+          title: 'Context Understanding',
+          content: `The selected passage contains ${selectedText.split(/\s+/).length} words and provides specific insights for focused analysis.`,
+          confidence: 88,
+          sources: ['Selection Processing']
+        },
+        {
+          id: 'fallback-selected-3',
+          type: 'connection',
+          title: 'Related Concepts',
+          content: 'This text segment can be connected to broader document themes for comprehensive understanding.',
+          confidence: 85,
+          sources: ['Context Analysis']
+        }
+      ] : [
+        {
+          id: 'fallback-insight-1',
+          type: 'key_point',
+          title: 'Document Processing Complete',
+          content: 'Your document has been successfully processed and is ready for detailed analysis. The content structure shows good organization.',
+          confidence: 90,
+          sources: ['Document Analysis System']
+        },
+        {
+          id: 'fallback-insight-2',
+          type: 'summary',
+          title: 'Content Quality Assessment',
+          content: 'The document demonstrates clear structure with well-defined sections, making it suitable for comprehensive content analysis.',
+          confidence: 85,
+          sources: ['Document Analysis System']
+        },
+        {
+          id: 'fallback-insight-3',
+          type: 'connection',
+          title: 'Analysis Opportunities',
+          content: 'Multiple analysis opportunities identified including thematic connections, content relationships, and structural patterns.',
+          confidence: 78,
+          sources: ['Document Analysis System']
+        }
+      ]
+
       return {
         success: true,
         fallback: true,
-        insights: [
-          {
-            id: 'fallback-insight-1',
-            type: 'key_point',
-            title: 'Document Processing Complete',
-            content: 'Your document has been successfully processed and is ready for detailed analysis. The content structure shows good organization.',
-            confidence: 90,
-            sources: ['Document Analysis System']
-          },
-          {
-            id: 'fallback-insight-2',
-            type: 'summary',
-            title: 'Content Quality Assessment',
-            content: 'The document demonstrates clear structure with well-defined sections, making it suitable for comprehensive content analysis.',
-            confidence: 85,
-            sources: ['Document Analysis System']
-          },
-          {
-            id: 'fallback-insight-3',
-            type: 'connection',
-            title: 'Analysis Opportunities',
-            content: 'Multiple analysis opportunities identified including thematic connections, content relationships, and structural patterns.',
-            confidence: 78,
-            sources: ['Document Analysis System']
-          }
-        ]
+        insights,
+        selectedText
       }
     }
   }

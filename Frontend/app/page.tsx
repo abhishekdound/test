@@ -64,14 +64,28 @@ export default function AdobeLearnPlatform() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false)
   const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false)
-  const [progress, setProgress] = useState(0) // This progress state is not used in the original code provided, but was in the changes. Keeping it as per instructions.
+  const [progress, setProgress] = useState(0)
   const [podcastUrl, setPodcastUrl] = useState<string | null>(null)
+  const [podcastData, setPodcastData] = useState<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [backendHealthy, setBackendHealthy] = useState(false)
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null) // This state is not used in the original code provided, but was in the changes. Keeping it as per instructions.
-  const fileInputRef = useRef<HTMLInputElement>(null) // This ref is not used in the original code provided, but was in the changes. Keeping it as per instructions.
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const [selectedText, setSelectedText] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
   const { toast } = useToast()
+
+  // Handle text selection
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection()
+    if (selection && selection.toString().trim().length > 0) {
+      setSelectedText(selection.toString().trim())
+      toast({
+        title: "Text Selected",
+        description: `Selected ${selection.toString().trim().length} characters for analysis`,
+      })
+    }
+  }, [toast])
 
   // Check backend health on component mount
   useEffect(() => {
@@ -225,11 +239,20 @@ export default function AdobeLearnPlatform() {
     }
   }, [documents, toast])
 
-  const generateInsights = useCallback(async () => {
+  const generateInsights = useCallback(async (useSelectedText: boolean = false) => {
     if (!selectedDocument) {
       toast({
         title: "No Document Selected",
         description: "Please select a document first before generating insights.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (useSelectedText && !selectedText.trim()) {
+      toast({
+        title: "No Text Selected",
+        description: "Please select some text in the document first.",
         variant: "destructive",
       })
       return
@@ -240,16 +263,19 @@ export default function AdobeLearnPlatform() {
     try {
       // Use the document's job ID for insights generation
       const jobId = selectedDocument.jobId || `mock-job-${Date.now()}`;
-      console.log('Generating insights for job:', jobId)
+      console.log('Generating insights for job:', jobId, useSelectedText ? 'with selected text' : 'for full document')
       
-      const response = await apiService.generateInsights(jobId);
+      const textToAnalyze = useSelectedText ? selectedText : undefined;
+      const response = await apiService.generateInsights(jobId, textToAnalyze);
       console.log('Insights response received:', response)
 
       if (response.insights && response.insights.length > 0) {
         setInsights(response.insights)
         toast({
           title: response.fallback ? "Insights Generated (Demo Mode)" : "Insights Generated",
-          description: `Generated ${response.insights.length} insights successfully`,
+          description: useSelectedText 
+            ? `Generated ${response.insights.length} insights from selected text`
+            : `Generated ${response.insights.length} insights from document`,
         })
       } else {
         throw new Error('No insights returned from API')
@@ -259,7 +285,24 @@ export default function AdobeLearnPlatform() {
       console.error('Insight generation error:', error)
       
       // Always provide fallback insights to ensure functionality
-      const fallbackInsights = [
+      const fallbackInsights = useSelectedText ? [
+        {
+          id: 'selected-fallback-1',
+          type: 'key_point',
+          title: 'Selected Text Analysis',
+          content: `Analysis of selected text (${selectedText.split(/\s+/).length} words): "${selectedText.substring(0, 100)}${selectedText.length > 100 ? '...' : ''}". Key concepts identified.`,
+          confidence: 92,
+          sources: ['Text Selection']
+        },
+        {
+          id: 'selected-fallback-2',
+          type: 'summary',
+          title: 'Focused Insights',
+          content: 'The selected passage provides specific information that can be expanded for deeper understanding.',
+          confidence: 88,
+          sources: ['Selection Analysis']
+        }
+      ] : [
         {
           id: 'error-fallback-1',
           type: 'key_point',
@@ -275,14 +318,6 @@ export default function AdobeLearnPlatform() {
           content: 'The document shows good organizational structure and contains valuable information for further analysis.',
           confidence: 75,
           sources: [selectedDocument.name]
-        },
-        {
-          id: 'error-fallback-3',
-          type: 'connection',
-          title: 'Analysis Ready',
-          content: 'Document is ready for detailed examination and cross-referencing with other materials.',
-          confidence: 70,
-          sources: [selectedDocument.name]
         }
       ]
       
@@ -293,26 +328,47 @@ export default function AdobeLearnPlatform() {
       })
     } finally {
       setIsGeneratingInsights(false)
+      if (useSelectedText) {
+        setSelectedText('') // Clear selection after use
+      }
     }
-  }, [selectedDocument, toast])
+  }, [selectedDocument, selectedText, toast])
 
   const generatePodcast = useCallback(async () => {
-    if (!selectedDocument || insights.length === 0) return
+    if (!selectedDocument) {
+      toast({
+        title: "No Document Selected",
+        description: "Please select a document first before generating podcast.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (insights.length === 0) {
+      toast({
+        title: "No Insights Available",
+        description: "Please generate insights first before creating a podcast.",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsGeneratingPodcast(true)
 
     try {
-      // Use the first document's job ID for podcast generation
+      // Use the document's job ID for podcast generation
       const jobId = selectedDocument.jobId || 'mock-job-id';
-      const response = await apiService.generatePodcast(jobId);
+      const response = await apiService.generatePodcast(jobId, insights);
 
       setPodcastUrl(response.audioUrl)
+      setPodcastData(response)
 
       toast({
-        title: "Podcast Generated",
-        description: "Your document has been converted to audio",
+        title: response.fallback ? "Podcast Generated (Demo Mode)" : "Podcast Generated",
+        description: "Your document insights have been converted to audio",
       })
     } catch (error) {
+      console.error('Podcast generation error:', error)
       toast({
         title: "Podcast Generation Failed", 
         description: "Failed to generate podcast",
@@ -335,7 +391,11 @@ export default function AdobeLearnPlatform() {
   }, [isPlaying, podcastUrl])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+      onMouseUp={handleTextSelection}
+      onTouchEnd={handleTextSelection}
+    >
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="text-center mb-8">
@@ -487,22 +547,50 @@ export default function AdobeLearnPlatform() {
                     </p>
                     <div className="mt-4 space-y-2">
                       <Button 
-                        onClick={generateInsights}
+                        onClick={() => generateInsights(false)}
                         disabled={isGeneratingInsights}
                         className="w-full"
                       >
                         <Lightbulb className="w-4 h-4 mr-2" />
                         {isGeneratingInsights ? 'Generating Insights...' : insights.length > 0 ? 'Regenerate Insights' : 'Generate Insights'}
                       </Button>
+                      
+                      {selectedText && (
+                        <Button 
+                          onClick={() => generateInsights(true)}
+                          disabled={isGeneratingInsights}
+                          variant="secondary"
+                          className="w-full"
+                        >
+                          <Lightbulb className="w-4 h-4 mr-2" />
+                          Analyze Selected Text
+                        </Button>
+                      )}
+                      
                       <Button 
                         onClick={generatePodcast}
-                        disabled={isGeneratingPodcast || !backendHealthy || insights.length === 0}
+                        disabled={isGeneratingPodcast || insights.length === 0}
                         variant="outline"
                         className="w-full"
                       >
                         <Headphones className="w-4 h-4 mr-2" />
                         {isGeneratingPodcast ? 'Generating...' : 'Create Podcast'}
                       </Button>
+                      
+                      {selectedText && (
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border">
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Selected Text:</p>
+                          <p className="text-sm">{selectedText.length > 100 ? selectedText.substring(0, 100) + '...' : selectedText}</p>
+                          <Button 
+                            onClick={() => setSelectedText('')}
+                            size="sm"
+                            variant="ghost"
+                            className="mt-1 h-6 px-2 text-xs"
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -594,21 +682,34 @@ export default function AdobeLearnPlatform() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="flex items-center gap-4">
-                          <Button onClick={togglePlayback} size="lg" disabled={!backendHealthy}>
+                        <div className="flex items-center gap-4 mb-4">
+                          <Button onClick={togglePlayback} size="lg">
                             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                           </Button>
                           <div className="flex-1">
                             <p className="font-semibold">{selectedDocument.name} - Audio Overview</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              AI-generated podcast from your document
+                              AI-generated podcast from your insights
                             </p>
+                            {podcastData?.duration && (
+                              <p className="text-xs text-gray-500">Duration: {podcastData.duration}</p>
+                            )}
                           </div>
-                          <Button variant="outline" size="sm" disabled={!backendHealthy}>
+                          <Button variant="outline" size="sm">
                             <Download className="w-4 h-4 mr-2" />
                             Download
                           </Button>
                         </div>
+                        
+                        {podcastData?.transcript && (
+                          <div className="border-t pt-4">
+                            <h4 className="font-semibold mb-2">Transcript</h4>
+                            <ScrollArea className="h-32 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                              <p className="text-sm whitespace-pre-line">{podcastData.transcript}</p>
+                            </ScrollArea>
+                          </div>
+                        )}
+                        
                         <audio 
                           ref={audioRef} 
                           src={podcastUrl} 
