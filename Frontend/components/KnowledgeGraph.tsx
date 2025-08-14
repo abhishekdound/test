@@ -1,7 +1,18 @@
 'use client'
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
-import { ReactFlow, useNodesState, useEdgesState, Controls, Background, Node, Edge, NodeTypes, Handle, Position } from '@xyflow/react'
+import { 
+  ReactFlow, 
+  useNodesState, 
+  useEdgesState, 
+  Controls, 
+  Background, 
+  Node, 
+  Edge, 
+  NodeTypes, 
+  Handle, 
+  Position 
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

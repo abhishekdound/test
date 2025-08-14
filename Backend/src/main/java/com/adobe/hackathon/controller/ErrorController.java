@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-public class CustomErrorController implements ErrorController {
+public class ApplicationErrorController implements ErrorController {
 
     @RequestMapping("/error")
     @ResponseBody
@@ -25,8 +25,8 @@ public class CustomErrorController implements ErrorController {
 
         errorResponse.put("status", statusCode != null ? statusCode : 500);
         errorResponse.put("error", errorMessage != null ? errorMessage : "An unexpected error occurred");
-        errorResponse.put("message", errorMessage != null ? errorMessage : "An unexpected error occurred");
-        errorResponse.put("path", requestURI != null ? requestURI : request.getRequestURI());
+        errorResponse.put("path", requestURI != null ? requestURI : "unknown");
+        errorResponse.put("timestamp", System.currentTimeMillis());
 
         return ResponseEntity.status(statusCode != null ? statusCode : 500).body(errorResponse);
     }
