@@ -46,6 +46,13 @@ app:
       max-sections-per-document: 5
       confidence-threshold: 0.7
       detailed-analysis: true
+      maxSectionsPerDocument: 100
+      minSnippetLen: 160
+      similarityThreshold: 0.30
+      topK: 3
+      targetWords: 300
+      overlapWords: 120
+      minChunkChars: 160
   pdf:
     processing:
       timeout: 300000
