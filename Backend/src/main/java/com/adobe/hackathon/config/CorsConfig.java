@@ -1,3 +1,4 @@
+
 package com.adobe.hackathon.config;
 
 import org.springframework.context.annotation.Bean;

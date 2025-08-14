@@ -1,3 +1,4 @@
+
 package com.adobe.hackathon.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,3 @@ public class JacksonConfiguration {
         return objectMapper;
     }
 }
-
-
-
