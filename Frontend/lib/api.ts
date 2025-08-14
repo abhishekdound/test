@@ -94,7 +94,7 @@ class ApiService {
 
   async findRelated(data: { content: string; documents: Array<{ name: string; content: string }> }) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/adobe/find-related`, {
+      const response = await fetch(`${this.baseUrl}/api/frontend/find-related`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,17 +114,24 @@ class ApiService {
         relatedSections: [
           {
             id: 'mock-1',
-            title: 'Related Section 1',
-            content: 'This is a mock related section based on your document content.',
+            title: 'Adobe Creative Suite Overview',
+            content: 'This section discusses Adobe\'s comprehensive creative software suite including Photoshop, Illustrator, and InDesign.',
             similarity: 0.85,
-            source: 'Mock Document'
+            documentName: 'Adobe Documentation'
           },
           {
             id: 'mock-2', 
-            title: 'Related Section 2',
-            content: 'Another related section that demonstrates the functionality.',
+            title: 'Document Processing Features',
+            content: 'Advanced document processing capabilities including PDF creation, editing, and collaboration tools.',
             similarity: 0.72,
-            source: 'Mock Document'
+            documentName: 'Adobe Documentation'
+          },
+          {
+            id: 'mock-3',
+            title: 'AI-Powered Analysis',
+            content: 'Machine learning algorithms for intelligent document analysis and content extraction.',
+            similarity: 0.68,
+            documentName: 'Adobe Documentation'
           }
         ]
       }
@@ -133,7 +140,7 @@ class ApiService {
 
   async generateInsights(jobId: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/adobe/insights/${jobId}`, {
+      const response = await fetch(`${this.baseUrl}/api/frontend/insights/${jobId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,17 +159,27 @@ class ApiService {
         insights: [
           {
             id: 'insight-1',
-            title: 'Key Finding',
-            description: 'This document contains important information about Adobe technologies.',
-            type: 'important',
-            confidence: 0.9
+            type: 'key_point',
+            title: 'Key Technology Insight',
+            content: 'Adobe\'s document processing technology leverages advanced AI algorithms for intelligent content analysis.',
+            confidence: 90,
+            sources: ['Adobe Documentation']
           },
           {
             id: 'insight-2',
-            title: 'Recommendation',
-            description: 'Consider exploring the document structure for better organization.',
-            type: 'suggestion',
-            confidence: 0.75
+            type: 'summary',
+            title: 'Document Summary',
+            content: 'The document provides comprehensive coverage of Adobe\'s innovative solutions for document management.',
+            confidence: 85,
+            sources: ['Adobe Documentation']
+          },
+          {
+            id: 'insight-3',
+            type: 'connection',
+            title: 'Cross-Document Connection',
+            content: 'Strong correlation found between document processing features and user workflow optimization.',
+            confidence: 78,
+            sources: ['Adobe Documentation']
           }
         ]
       }
@@ -171,7 +188,7 @@ class ApiService {
 
   async generatePodcast(jobId: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/adobe/podcast/${jobId}`, {
+      const response = await fetch(`${this.baseUrl}/api/frontend/podcast/${jobId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +205,7 @@ class ApiService {
       return {
         fallback: true,
         audioUrl: 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=',
-        transcript: 'Mock podcast transcript: Welcome to the document analysis podcast. Today we are discussing the content of your uploaded document...'
+        transcript: 'Welcome to the Adobe Learn Platform podcast. In this episode, we explore the advanced document processing capabilities and AI-powered analysis features...'
       }
     }
   }

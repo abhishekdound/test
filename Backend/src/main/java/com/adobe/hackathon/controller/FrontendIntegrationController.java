@@ -432,22 +432,6 @@ public class FrontendIntegrationController {
     }
 
     /**
-     * Health check endpoint
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> healthCheck() {
-        Map<String, Object> health = new HashMap<>();
-        health.put("status", "UP");
-        health.put("timestamp", System.currentTimeMillis());
-        health.put("services", Map.of(
-            "database", "UP",
-            "fileStorage", "UP",
-            "adobe", "CONFIGURED"
-        ));
-        return ResponseEntity.ok(health);
-    }
-
-    /**
      * Get graph data for visualization
      */
     @GetMapping("/graph-data")
@@ -529,6 +513,9 @@ public class FrontendIntegrationController {
             // Log the upload
             logger.info("Received {} files for analysis with persona: {} and job: {}", 
                        files.length, persona, jobToBeDone);
+
+            // Here you would typically trigger an asynchronous analysis job
+            // For now, we just return the job ID and status
 
             return ResponseEntity.ok(response);
 

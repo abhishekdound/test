@@ -352,7 +352,7 @@ export default function AdobeLearnPlatform() {
                     disabled={isAnalyzing}
                   />
                   <label htmlFor="file-upload">
-                    <Button asChild disabled={isAnalyzing || !backendHealthy}>
+                    <Button asChild disabled={isAnalyzing}>
                       <span className="cursor-pointer">
                         {isAnalyzing ? 'Processing...' : 'Select Files'}
                       </span>
@@ -408,11 +408,11 @@ export default function AdobeLearnPlatform() {
                           <div className="flex gap-2">
                             <Button
                               onClick={() => analyzeDocument(doc)}
-                              disabled={isAnalyzing || !backendHealthy}
+                              disabled={isAnalyzing}
                               variant="outline"
                             >
                               <Brain className="w-4 h-4 mr-2" />
-                              Analyze
+                              {isAnalyzing ? 'Analyzing...' : 'Analyze'}
                             </Button>
                           </div>
                         </div>
