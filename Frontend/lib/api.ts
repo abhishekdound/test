@@ -13,14 +13,30 @@ class ApiService {
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
       const response = await fetch(`${this.baseUrl}/api/frontend/health`, {
+        method: 'GET',
         signal: controller.signal,
-        cache: 'no-cache'
+        cache: 'no-cache',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       })
 
       clearTimeout(timeoutId)
-      return response.ok
+      
+      if (response.ok) {
+        console.log('Backend health check: OK')
+        return true
+      } else {
+        console.warn(`Backend health check failed with status: ${response.status}`)
+        return false
+      }
     } catch (error) {
-      console.error('Health check failed:', error)
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Health check timeout')
+      } else {
+        console.error('Health check failed:', error)
+      }
       return false
     }
   }

@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -9,41 +10,52 @@ declare global {
 }
 
 export default function AdobeScript() {
-  const [mounted, setMounted] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Check if we're on the client side
+    if (typeof window === 'undefined') return
 
-  useEffect(() => {
-    if (!mounted) return
+    // Check if Adobe DC is already loaded
+    if (window.AdobeDC) {
+      setIsLoaded(true)
+      return
+    }
 
-    // Only load if not already loaded and we're on client side
-    if (typeof window !== 'undefined' && !window.AdobeDC) {
-      const script = document.createElement('script')
-      script.src = 'https://acrobatservices.adobe.com/view-sdk/viewer.js'
-      script.async = true
-      script.onload = () => {
-        console.log('Adobe PDF Embed API loaded successfully')
-      }
-      script.onerror = () => {
-        console.error('Failed to load Adobe PDF Embed API')
-      }
+    // Check if script is already being loaded
+    const existingScript = document.querySelector('script[src*="acrobatservices.adobe.com"]')
+    if (existingScript) {
+      existingScript.addEventListener('load', () => setIsLoaded(true))
+      existingScript.addEventListener('error', () => setError('Failed to load Adobe PDF SDK'))
+      return
+    }
 
-      document.head.appendChild(script)
+    // Load the Adobe PDF Embed API script
+    const script = document.createElement('script')
+    script.src = 'https://acrobatservices.adobe.com/view-sdk/viewer.js'
+    script.async = true
+    
+    script.onload = () => {
+      console.log('Adobe PDF Embed API loaded successfully')
+      setIsLoaded(true)
+    }
+    
+    script.onerror = () => {
+      console.error('Failed to load Adobe PDF Embed API')
+      setError('Failed to load Adobe PDF SDK')
+    }
 
-      return () => {
-        // Cleanup if needed
-        if (script.parentNode) {
-          script.parentNode.removeChild(script)
-        }
+    document.head.appendChild(script)
+
+    return () => {
+      // Cleanup
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
       }
     }
-  }, [mounted])
+  }, [])
 
-  if (!mounted) {
-    return null
-  }
-
+  // This component doesn't render anything visible
   return null
 }

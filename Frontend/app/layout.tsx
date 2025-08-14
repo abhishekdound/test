@@ -1,8 +1,10 @@
+
 import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
+import AdobeScript from "@/components/AdobeScript"
 
 export const metadata: Metadata = {
   title: "Adobe Learn",
@@ -18,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script src="https://acrobatservices.adobe.com/view-sdk/viewer.js"></script>
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};
@@ -27,7 +28,10 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        <AdobeScript />
+        {children}
+      </body>
     </html>
   )
 }

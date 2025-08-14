@@ -73,7 +73,7 @@ app:
       tts-threshold: 30000
 
 cors:
-  allowed-origins: "http://localhost:3000,http://0.0.0.0:3000,http://localhost:8080,http://0.0.0.0:8080,https://*.replit.dev,https://*.replit.app"
+  allowed-origins: "http://0.0.0.0:3000,http://localhost:3000,http://0.0.0.0:8080,http://localhost:8080"
   allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
   allowed-headers: "*"
   allow-credentials: true

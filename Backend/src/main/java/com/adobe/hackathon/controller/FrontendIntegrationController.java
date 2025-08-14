@@ -32,6 +32,26 @@ public class FrontendIntegrationController {
     private AdobeAnalysisService adobeAnalysisService;
 
     /**
+     * Health check endpoint for frontend integration
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> healthCheck() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "UP");
+            response.put("service", "Adobe Learn Platform");
+            response.put("timestamp", System.currentTimeMillis());
+            response.put("version", "1.0.0");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Health check failed", e);
+            response.put("status", "DOWN");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        }
+    }
+
+    /**
      * Get document viewer data with sections and navigation
      */
     @GetMapping("/document-viewer/{jobId}")
