@@ -1,135 +1,130 @@
-# Adobe Learn Platform - Frontend & Backend Integration
+# Adobe Learn Platform
 
-This project consists of a Spring Boot backend and a Next.js frontend that work together to provide an AI-powered document analysis and learning platform.
+A comprehensive AI-powered document analysis and learning platform built with Spring Boot backend and Next.js frontend.
 
-## Project Structure
+## 🚀 Quick Start
 
-```
-├── Backend/                 # Spring Boot application
-│   ├── src/main/java/com/adobe/hackathon/
-│   │   ├── controller/      # REST API controllers
-│   │   ├── service/         # Business logic services
-│   │   ├── model/          # Data models and DTOs
-│   │   ├── repository/     # Data access layer
-│   │   ├── config/         # Configuration classes
-│   │   └── util/           # Utility classes
-│   ├── src/main/resources/
-│   │   └── application.yml # Application configuration
-│   └── pom.xml            # Maven dependencies
-├── Frontend/               # Next.js application
-│   ├── app/               # Next.js app directory
-│   ├── components/        # React components
-│   ├── lib/              # Utility libraries
-│   ├── hooks/            # Custom React hooks
-│   └── package.json      # Node.js dependencies
-└── README.md             # This file
-```
-
-## Prerequisites
-
+### Prerequisites
 - Java 17 or higher
 - Node.js 18 or higher
-- Maven 3.6 or higher
-- npm or pnpm
+- Maven 3.6+
 
-## Quick Start
+### Running the Application
 
-### 1. Start the Backend
-
+#### Option 1: Using the provided script (Recommended)
 ```bash
-cd Backend
-
-# Install dependencies (if needed)
-mvn clean install
+# Make the script executable (Linux/Mac)
+chmod +x run-app.sh
 
 # Run the application
-mvn spring-boot:run
+./run-app.sh
 ```
 
-The backend will start on `http://localhost:8080`
+#### Option 2: Manual startup
 
-### 2. Start the Frontend
+**Backend (Spring Boot)**
+```bash
+cd Backend
+./mvnw clean package -DskipTests
+java -jar target/Adobe1B.jar
+```
 
+**Frontend (Next.js)**
 ```bash
 cd Frontend
-
-# Install dependencies
 npm install
-# or
-pnpm install
-
-# Run the development server
 npm run dev
-# or
-pnpm dev
 ```
 
-The frontend will start on `http://localhost:3000`
+### Access URLs
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **Backend Health**: http://localhost:8080/api/frontend/health
 
-## API Integration
+## 🏗️ Architecture
 
-### Backend API Endpoints
+### Backend (Spring Boot)
+- **Port**: 8080
+- **Framework**: Spring Boot 3.x
+- **Database**: H2 (in-memory/file)
+- **Key Controllers**:
+  - `FrontendIntegrationController`: Handles frontend API requests
+  - `AdobeChallengeController`: Core Adobe Challenge functionality
+  - `DocumentAnalysisController`: Document processing and analysis
 
-The backend provides the following main API endpoints:
+### Frontend (Next.js)
+- **Port**: 3000
+- **Framework**: Next.js 14 with TypeScript
+- **UI**: Tailwind CSS + Radix UI components
+- **Key Features**:
+  - Document upload and analysis
+  - AI-powered insights generation
+  - Podcast generation from insights
+  - Knowledge graph visualization
 
-#### Core Analysis Endpoints
-- `POST /api/adobe/analyze` - Upload and analyze PDF documents
-- `GET /api/adobe/status/{jobId}` - Get analysis job status
-- `GET /api/adobe/performance` - Get performance metrics
+## 🔗 Backend-Frontend Integration
 
-#### Insights & Related Content
-- `POST /api/adobe/insights/{jobId}` - Generate AI insights
-- `GET /api/adobe/related-sections/{jobId}/{sectionId}` - Get related sections
-- `POST /api/adobe/bulk-insights/{jobId}` - Generate bulk insights
+### API Endpoints
 
-#### Podcast Generation
-- `POST /api/adobe/podcast/{jobId}` - Generate audio podcast from documents
+#### Frontend Integration Endpoints (`/api/frontend/`)
+- `POST /analyze` - Upload and analyze PDF documents
+- `GET /status/{jobId}` - Get analysis job status
+- `POST /insights/{jobId}` - Generate insights for a document
+- `POST /podcast/{jobId}` - Generate podcast from insights
+- `GET /health` - Health check endpoint
 
-#### Frontend Integration
-- `GET /api/frontend/document-viewer/{jobId}` - Get document viewer configuration
-- `GET /api/frontend/highlighted-sections/{jobId}` - Get highlighted sections
-- `GET /api/frontend/pdf-embed/{jobId}` - Get PDF embed configuration
+#### Adobe Challenge Endpoints (`/api/adobe/`)
+- `POST /analyze` - Full Adobe Challenge analysis
+- `GET /related-sections/{jobId}/{sectionId}` - Get related sections
+- `GET /accuracy/{jobId}` - Get section accuracy validation
+- `GET /performance` - Get performance metrics
 
-#### PDF Embed API
-- `GET /api/pdf-embed/config/{jobId}` - Get Adobe PDF Embed configuration
-- `GET /api/pdf-embed/file/{jobId}` - Get PDF file
-- `GET /api/pdf-embed/metadata/{jobId}` - Get PDF metadata
+### Integration Flow
 
-### Frontend API Service
+1. **Document Upload**: Frontend sends PDF files to `/api/frontend/analyze`
+2. **Job Processing**: Backend processes documents asynchronously
+3. **Status Polling**: Frontend polls `/api/frontend/status/{jobId}` for completion
+4. **Results Display**: Analysis results are displayed in the frontend UI
+5. **Additional Features**: Users can generate insights and podcasts
 
-The frontend uses a centralized API service (`Frontend/lib/api.ts`) that provides:
+### Error Handling
+- **Backend Unavailable**: Frontend gracefully falls back to mock data
+- **Network Issues**: Automatic retry with exponential backoff
+- **File Validation**: Proper error messages for invalid files
 
-- Type-safe API calls
-- Error handling
-- Request/response interceptors
-- Automatic retry logic
+## 🎯 Key Features
 
-### Custom Hooks
+### Document Analysis
+- PDF text extraction and processing
+- AI-powered content analysis
+- Section identification and categorization
+- Related content discovery
 
-The frontend includes custom React hooks for API integration:
+### AI Insights
+- LLM-powered insights generation
+- Context-aware analysis
+- Confidence scoring
+- Source attribution
 
-- `useFileUpload()` - Handle file uploads with progress
-- `useInsightsGeneration()` - Generate AI insights
-- `usePodcastGeneration()` - Generate podcasts
-- `useRelatedSections()` - Get related content
-- `useJobPolling()` - Poll job status
-- `useMultiApi()` - Manage multiple API calls
+### Podcast Generation
+- Text-to-speech conversion
+- Natural language processing
+- Audio file generation
+- Transcript creation
 
-## Configuration
+### Knowledge Graph
+- Interactive visualization
+- Document relationship mapping
+- Concept clustering
+- Visual navigation
 
-### Backend Configuration
+## 🔧 Configuration
 
-The backend configuration is in `Backend/src/main/resources/application.yml`:
-
+### Backend Configuration (`application.yml`)
 ```yaml
 server:
   port: 8080
   address: 0.0.0.0
-
-cors:
-  allowed-origins: "http://localhost:3000,http://localhost:8080"
-  allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
-  allowed-headers: "*"
 
 app:
   analysis:
@@ -137,194 +132,120 @@ app:
       enabled: true
       max-sections-per-document: 5
       confidence-threshold: 0.7
+
+cors:
+  allowed-origins: "http://localhost:3000,http://0.0.0.0:3000"
 ```
 
 ### Frontend Configuration
+- API base URL: Configured in `Frontend/lib/api.ts`
+- Environment variables: Set in `.env.local`
+- CORS: Handled by backend configuration
 
-The frontend configuration is in `Frontend/next.config.mjs`:
+## 🐳 Docker Support
 
-```javascript
-const nextConfig = {
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/backend/:path*',
-        destination: 'http://localhost:8080/api/:path*',
-      },
-    ]
-  },
-}
-```
-
-## Environment Variables
-
-### Backend Environment Variables
-
-Create a `.env` file in the Backend directory:
-
-```env
-ADOBE_CLIENT_ID=your_adobe_client_id
-ADOBE_CLIENT_SECRET=your_adobe_client_secret
-GOOGLE_APPLICATION_CREDENTIALS=path_to_google_credentials.json
-AZURE_SPEECH_KEY=your_azure_speech_key
-AZURE_SPEECH_REGION=your_azure_region
-```
-
-### Frontend Environment Variables
-
-Create a `.env.local` file in the Frontend directory:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_ADOBE_CLIENT_ID=your_adobe_client_id
-```
-
-## Development Workflow
-
-### 1. File Upload Flow
-
-1. User selects PDF files in the frontend
-2. Frontend calls `POST /api/adobe/analyze` with files and analysis parameters
-3. Backend processes files and returns a job ID
-4. Frontend polls job status using `GET /api/adobe/status/{jobId}`
-5. When complete, frontend displays results
-
-### 2. Insights Generation Flow
-
-1. User clicks "Generate Insights" button
-2. Frontend calls `POST /api/adobe/insights/{jobId}`
-3. Backend generates AI insights using LLM
-4. Frontend displays insights in a modal
-
-### 3. Podcast Generation Flow
-
-1. User clicks "Generate Podcast" button
-2. Frontend calls `POST /api/adobe/podcast/{jobId}`
-3. Backend generates audio using TTS service
-4. Frontend displays audio player with generated podcast
-
-## Error Handling
-
-### Backend Error Handling
-
-- Global exception handler in `@ControllerAdvice`
-- Structured error responses with error codes
-- Logging with SLF4J
-- Performance monitoring and metrics
-
-### Frontend Error Handling
-
-- Centralized error handling in API service
-- User-friendly error messages
-- Retry logic for failed requests
-- Loading states and error states
-
-## Performance Optimization
-
-### Backend Performance
-
-- Async processing for long-running operations
-- Caching with Spring Cache
-- Database connection pooling
-- File upload size limits and validation
-
-### Frontend Performance
-
-- React.memo for component optimization
-- Lazy loading of components
-- Image optimization
-- Bundle splitting
-
-## Testing
-
-### Backend Testing
-
+### Running with Docker Compose
 ```bash
 cd Backend
-mvn test
-```
-
-### Frontend Testing
-
-```bash
-cd Frontend
-npm run test
-```
-
-## Deployment
-
-### Backend Deployment
-
-```bash
-cd Backend
-mvn clean package
-java -jar target/Adobe1B.jar
-```
-
-### Frontend Deployment
-
-```bash
-cd Frontend
-npm run build
-npm start
-```
-
-## Docker Deployment
-
-### Backend Docker
-
-```bash
-cd Backend
-docker build -t adobe-backend .
-docker run -p 8080:8080 adobe-backend
-```
-
-### Frontend Docker
-
-```bash
-cd Frontend
-docker build -t adobe-frontend .
-docker run -p 3000:3000 adobe-frontend
-```
-
-### Docker Compose
-
-```bash
 docker-compose up -d
 ```
 
-## Troubleshooting
+### Docker Configuration
+- Backend service on port 8080
+- Optional PostgreSQL for production
+- Optional Redis for caching
+- Nginx for load balancing (production)
+
+## 📊 Performance Requirements
+
+### Adobe Challenge Compliance
+- **Analysis Time**: ≤10 seconds for base features
+- **Navigation Time**: <2 seconds for related sections
+- **Accuracy**: >80% for at least 3 sections
+- **Browser Support**: Chrome compatible
+- **Base App**: CPU only (no GPU required)
+
+### Monitoring
+- Real-time performance metrics
+- Operation timing and validation
+- Error tracking and logging
+- Health check endpoints
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd Backend
+./mvnw test
+```
+
+### Frontend Tests
+```bash
+cd Frontend
+npm test
+```
+
+### Integration Tests
+- API endpoint testing
+- End-to-end workflow validation
+- Performance benchmarking
+- Error scenario testing
+
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **CORS Errors**: Ensure CORS configuration is correct in both frontend and backend
-2. **Port Conflicts**: Check if ports 3000 and 8080 are available
-3. **File Upload Issues**: Verify file size limits and multipart configuration
-4. **API Connection**: Check if backend is running and accessible
+1. **Backend not starting**
+   - Check Java version (requires 17+)
+   - Verify port 8080 is available
+   - Check application logs
 
-### Debug Mode
+2. **Frontend not connecting to backend**
+   - Verify backend is running on port 8080
+   - Check CORS configuration
+   - Review network connectivity
 
-#### Backend Debug
+3. **File upload issues**
+   - Ensure files are PDF format
+   - Check file size limits (100MB max)
+   - Verify upload directory permissions
 
-Add to `application.yml`:
-```yaml
-logging:
-  level:
-    com.adobe.hackathon: DEBUG
-    org.springframework.web: DEBUG
+4. **Analysis timeout**
+   - Check backend resources
+   - Review analysis service logs
+   - Verify external API dependencies
+
+### Logs
+- **Backend**: Check `backend.log` or console output
+- **Frontend**: Check browser console and `frontend.log`
+- **Docker**: Use `docker-compose logs`
+
+## 📝 Development
+
+### Adding New Features
+1. Backend: Add new endpoints in appropriate controller
+2. Frontend: Create new API calls in `api.ts`
+3. UI: Add components and integrate with state management
+4. Testing: Add unit and integration tests
+
+### Code Structure
+```
+├── Backend/
+│   ├── src/main/java/com/adobe/hackathon/
+│   │   ├── controller/     # REST API endpoints
+│   │   ├── service/        # Business logic
+│   │   ├── model/          # Data models
+│   │   └── config/         # Configuration
+│   └── src/main/resources/ # Configuration files
+├── Frontend/
+│   ├── app/                # Next.js app directory
+│   ├── components/         # React components
+│   ├── lib/                # Utility functions
+│   └── types/              # TypeScript definitions
+└── docs/                   # Documentation
 ```
 
-#### Frontend Debug
-
-Add to browser console:
-```javascript
-localStorage.setItem('debug', 'true')
-```
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -332,6 +253,14 @@ localStorage.setItem('debug', 'true')
 4. Add tests
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License.
+This project is part of the Adobe Challenge and follows Adobe's development guidelines.
+
+## 🆘 Support
+
+For issues and questions:
+1. Check the troubleshooting section
+2. Review application logs
+3. Create an issue with detailed information
+4. Include system information and error messages

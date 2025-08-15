@@ -1,6 +1,8 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('replit') 
   ? `https://${window.location.hostname.replace(/.*?-/, '').replace(/-.*/, '')}-8080.replit.dev`
-  : 'http://0.0.0.0:8080');
+  : 'http://localhost:8080');
+
+console.log('🌐 API Base URL configured as:', API_BASE_URL);
 
 class ApiService {
   private baseUrl: string
@@ -11,13 +13,16 @@ class ApiService {
 
   async healthCheck(): Promise<boolean> {
     try {
+      console.log('🔍 Starting health check to:', `${this.baseUrl}/api/frontend/health`)
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
       const response = await fetch(`${this.baseUrl}/api/frontend/health`, {
         method: 'GET',
         signal: controller.signal,
         cache: 'no-cache',
+        mode: 'cors',
+        credentials: 'omit',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -25,19 +30,24 @@ class ApiService {
       })
 
       clearTimeout(timeoutId)
+      console.log('📡 Response received:', response.status, response.statusText)
 
       if (response.ok) {
-        console.log('Backend health check: OK')
+        console.log('✅ Backend health check: OK')
+        const data = await response.json()
+        console.log('📊 Backend response data:', data)
         return true
       } else {
-        console.warn(`Backend health check failed with status: ${response.status}`)
+        console.warn(`❌ Backend health check failed with status: ${response.status}`)
+        console.warn('Response headers:', Object.fromEntries(response.headers.entries()))
         return false
       }
     } catch (error) {
+      console.error('💥 Health check error:', error)
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Health check timeout')
+        console.error('⏰ Health check timeout')
       } else {
-        console.error('Health check failed:', error)
+        console.error('🚫 Health check failed:', error)
       }
       return false
     }
@@ -79,7 +89,7 @@ class ApiService {
 
   async getJobStatus(jobId: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/adobe/status/${jobId}`)
+      const response = await fetch(`${this.baseUrl}/api/frontend/status/${jobId}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -87,9 +97,111 @@ class ApiService {
     } catch (error) {
       console.error('Job status check failed:', error)
       return {
+        success: false,
         status: 'completed',
         progress: 100,
-        message: 'Analysis complete (mock data)'
+        message: 'Analysis complete (mock data)',
+        fallback: true
+      }
+    }
+  }
+
+  async getFileContent(jobId: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/frontend/file-content/${jobId}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Get file content failed:', error)
+      return {
+        success: false,
+        fallback: true,
+        fileData: {
+          content: 'File content not available (backend unavailable)',
+          fileName: `document-${jobId}.txt`,
+          fileType: 'text',
+          size: 0,
+          uploadedAt: new Date().toISOString()
+        }
+      }
+    }
+  }
+
+  async bulkUpload(files: File[], persona: string = 'student', jobToBeDone: string = 'analyze documents') {
+    try {
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+      formData.append('persona', persona)
+      formData.append('jobToBeDone', jobToBeDone)
+
+      const response = await fetch(`${this.baseUrl}/api/frontend/bulk-upload`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Bulk upload failed:', error)
+      return {
+        success: false,
+        fallback: true,
+        jobId: `mock-bulk-${Date.now()}`,
+        status: 'FAILED',
+        message: 'Bulk upload failed (backend unavailable)'
+      }
+    }
+  }
+
+  async getHighlightedSections(jobId: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/frontend/highlighted-sections/${jobId}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Get highlighted sections failed:', error)
+      return {
+        success: false,
+        fallback: true,
+        highlightedSections: [],
+        totalSections: 0,
+        averageAccuracy: 0.0
+      }
+    }
+  }
+
+  async generatePodcast(jobId: string, insights: any[]) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/frontend/generate-podcast/${jobId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(insights)
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Generate podcast failed:', error)
+      return {
+        success: false,
+        fallback: true,
+        audioUrl: null,
+        duration: 180,
+        insightsCount: insights.length
       }
     }
   }
@@ -281,3 +393,4 @@ class ApiService {
 // Export the service instance
 export const apiService = new ApiService()
 export default apiService
+

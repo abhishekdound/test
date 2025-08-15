@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.List;
 
 public class HttpHelpers {
     static HttpClient client = HttpClient.newHttpClient();
@@ -51,9 +52,14 @@ public class HttpHelpers {
 
     public static String geminiChat(String model, String prompt) {
         try {
-            // Example Gemini REST endpoint (replace with actual)
+            // Get Gemini API key from environment or use a default for testing
+            String apiKey = System.getenv("GEMINI_API_KEY");
+            if (apiKey == null || apiKey.isEmpty()) {
+                apiKey = "AIzaSyBvQvQvQvQvQvQvQvQvQvQvQvQvQvQvQvQ"; // Fallback for testing
+            }
+            
             String url = "https://generativelanguage.googleapis.com/v1beta/models/"
-                    + model + ":generateContent?key=" + System.getenv("GEMINI_API_KEY");
+                    + model + ":generateContent?key=" + apiKey;
 
             String requestBody = "{ \"contents\": [{ \"parts\":[{\"text\": \""
                     + escapeJson(prompt) + "\"}]}] }";
@@ -65,6 +71,34 @@ public class HttpHelpers {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            // Parse the Gemini response to extract the text content
+            if (response.statusCode() == 200) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map<String, Object> jsonResponse = mapper.readValue(response.body(), Map.class);
+                    
+                    if (jsonResponse.containsKey("candidates") && jsonResponse.get("candidates") instanceof List) {
+                        List<Map<String, Object>> candidates = (List<Map<String, Object>>) jsonResponse.get("candidates");
+                        if (!candidates.isEmpty()) {
+                            Map<String, Object> candidate = candidates.get(0);
+                            if (candidate.containsKey("content") && candidate.get("content") instanceof Map) {
+                                Map<String, Object> content = (Map<String, Object>) candidate.get("content");
+                                if (content.containsKey("parts") && content.get("parts") instanceof List) {
+                                    List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+                                    if (!parts.isEmpty() && parts.get(0).containsKey("text")) {
+                                        return parts.get(0).get("text").toString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error parsing Gemini response: " + e.getMessage());
+                }
+            }
+            
+            // Return raw response if parsing fails
             return response.body();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

@@ -23,23 +23,23 @@ public class AdobeController {
 
     public AdobeController(IndexService i, LlmService l, TtsService t){ this.index=i; this.llm=l; this.tts=t; }
 
-    @PostMapping("/analyze")
+    @PostMapping("/analyze-legacy")
     public Map<String,String> analyze(@RequestParam("files") List<MultipartFile> files) throws IOException {
         return Map.of("jobId", index.analyze(files));
     }
 
-    @GetMapping("/related-sections/{jobId}/{sectionId}")
+    @GetMapping("/related-sections-legacy/{jobId}/{sectionId}")
     public List<RelatedResult> related(@PathVariable String jobId, @PathVariable String sectionId) {
         return index.related(jobId, sectionId, 3);
     }
 
-    @PostMapping("/insights/{jobId}")
+    @PostMapping("/insights-legacy/{jobId}")
     public InsightResponse insights(@PathVariable String jobId) throws JsonProcessingException {
         var ctx = index.sections(jobId).stream().limit(12).map(s -> s.getText()).collect(Collectors.joining("\n\n"));
         return llm.generateInsights(ctx);
     }
 
-    @PostMapping("/podcast/{jobId}")
+    @PostMapping("/podcast-legacy/{jobId}")
     public Map<String,String> podcast(@PathVariable String jobId) {
         String script = llm.podcastScript(index.sections(jobId));
         String url = tts.synthesize(script); // return file URL

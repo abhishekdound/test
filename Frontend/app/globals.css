@@ -88,3 +88,32 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* File Viewer Styles */
+.search-highlight {
+  background-color: #fef08a;
+  padding: 1px 2px;
+  border-radius: 2px;
+  animation: highlight-pulse 0.3s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0% { background-color: #fef08a; }
+  50% { background-color: #fde047; }
+  100% { background-color: #fef08a; }
+}
+
+.dark .search-highlight {
+  background-color: #ca8a04;
+  color: #000;
+}
+
+.dark .search-highlight {
+  animation: highlight-pulse-dark 0.3s ease-in-out;
+}
+
+@keyframes highlight-pulse-dark {
+  0% { background-color: #ca8a04; }
+  50% { background-color: #eab308; }
+  100% { background-color: #ca8a04; }
+}

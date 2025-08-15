@@ -3,7 +3,14 @@ import {useEffect, useRef, useState} from 'react';
 import Script from 'next/script';
 
 declare global {
-  interface Window { AdobeDC?: any }
+  interface Window { 
+    AdobeDC?: {
+      View: new (config: { clientId: string; divId: string; }) => {
+        previewFile: (filePromise: any, viewerConfig: any) => void;
+        getAPIs: () => Promise<any>;
+      }
+    }
+  }
 }
 
 type JumpTarget = { pageNumber: number };
@@ -50,7 +57,9 @@ export default function PdfReader({ fileUrl, fileName, onReady, onPageChange }: 
 
   // expose a tiny API via DOM dataset for parent components (optional)
   useEffect(() => {
-    (viewerRef.current as any)?.setGoTo = goTo;
+    if (viewerRef.current) {
+      (viewerRef.current as any).setGoTo = goTo;
+    }
   }, [api]);
 
   return (
